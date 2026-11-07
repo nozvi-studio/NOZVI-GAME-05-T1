@@ -14,6 +14,9 @@ const CSS = `
 .htg-bubble .row { display: flex; flex-wrap: wrap; gap: 3px; margin-bottom: 3px; }
 .htg-chip { background: #f3e2c0; border-radius: 8px; padding: 1px 6px; white-space: nowrap; }
 .htg-chip.g { background: #d9efd2; }
+.htg-chip.done { opacity: .6; background: #cfe9c6; }
+.htg-chip.done::before { content: "✓ "; font-weight: 800; color: #2e8b3e; }
+.htg-bubble.ready { box-shadow: 0 0 0 3px #3fbf5a, 0 3px 10px rgba(0,0,0,.45); }
 .htg-bubble .tag { position: absolute; top: -10px; right: -6px; background: #8e5ad1; color: #fff; border-radius: 8px; padding: 0 6px; font-size: 11px; }
 .htg-patience { height: 7px; background: #ddd; border-radius: 4px; overflow: hidden; }
 .htg-patience > div { height: 100%; border-radius: 4px; transition: background-color .3s; }

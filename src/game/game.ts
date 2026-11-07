@@ -3,11 +3,10 @@ import { DaySim } from '../core';
 import type { Bowl, GameEvent, Grade, HintTarget } from '../core/types';
 import { GARNISHES, TOPPINGS } from '../core/types';
 import { PointerInput } from '../input';
-import { COUNTER_TOP, CustomerViews, createStreetScene, type StreetScene } from '../scene';
-import { GARNISH_LABEL, GRADE_LABEL, STR, TOPPING_LABEL, Ui, money, type BubbleData, type ScreenPoint, type WorldLabel } from '../ui';
+import { COUNTER_TOP, CustomerViews, SEATED_HEAD_TOP, createStreetScene, type StreetScene } from '../scene';
+import { GARNISH_LABEL, GRADE_LABEL, STR, TOPPING_LABEL, Ui, money, orderProgress, type BubbleData, type ScreenPoint, type WorldLabel } from '../ui';
 
 const MAX_DT = 0.1; // ARCHITECTURE §6: hidden tab must not skip the day.
-const HEAD_HEIGHT = 1.75;
 
 const newSeed = () => Math.floor(Math.random() * 0x7fffffff);
 
@@ -127,11 +126,11 @@ export class Game {
 
   private onEvent(e: GameEvent): void {
     if (e.type === 'customerServed') {
-      const at = this.project(this.headPos(e.customer.table, 0.4));
+      const at = this.project(this.headPos(e.customer.table, 0.3));
       this.ui.float(at, `+${money(e.payment.total)}`);
       if (e.payment.perfect) this.ui.float({ x: at.x, y: at.y + 30 }, GRADE_LABEL.perfect, true);
     } else if (e.type === 'customerGaveUp') {
-      this.ui.float(this.project(this.headPos(e.customer.table, 0.4)), '😠', true);
+      this.ui.float(this.project(this.headPos(e.customer.table, 0.3)), '😠', true);
     } else if (e.type === 'dayEnded') {
       this.input.cancel();
       this.ui.showSummary(e.summary);
@@ -163,10 +162,11 @@ export class Game {
       if (c.state !== 'waiting' || sim.ended) continue;
       bubbles.push({
         id: c.id,
-        at: this.project(this.headPos(c.table, 0.35)),
+        at: this.project(this.headPos(c.table, 0.15)),
         order: c.order,
         patience: c.patience / c.maxPatience,
         hurried: c.kind === 'hurried',
+        progress: orderProgress(c.order, sim.kitchen.bowl),
       });
     }
     this.ui.bubbles.update(bubbles);
@@ -231,7 +231,7 @@ export class Game {
 
   private headPos(table: number, extra: number): THREE.Vector3 {
     const t = this.street.tables[table].position;
-    return this.tmp.set(t.x, t.y + HEAD_HEIGHT + extra, t.z - 0.75);
+    return this.tmp.set(t.x, t.y + SEATED_HEAD_TOP + extra, t.z - 0.75);
   }
 
   private objPos(name: string, dy = 0, dx = 0, dz = 0): ScreenPoint {

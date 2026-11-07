@@ -9,6 +9,13 @@ const SKIN = 0xe0b48a;
 const ANGRY = 0xe04848;
 const STREET_Z = -7;
 
+// Seated pose: the group drops SIT_DROP below the lifted seat point, so head height is derived, not guessed.
+const SEAT_LIFT = 0.1;
+const SIT_DROP = 0.45;
+const HEAD_TOP_LOCAL = 1.38; // top of the hair in the customer's local space
+/** Head-top height of a seated customer above the table origin (VIS-101: anchor for bubbles and floating text). */
+export const SEATED_HEAD_TOP = SEAT.y + SEAT_LIFT - SIT_DROP + HEAD_TOP_LOCAL;
+
 export interface CustomerTiming {
   arriveSeconds: number;
   leaveSeconds: number;
@@ -75,7 +82,7 @@ class CustomerView {
   }
 
   sit(seat: THREE.Vector3, time: number, eating: boolean): void {
-    this.group.position.set(seat.x, seat.y - 0.45, seat.z);
+    this.group.position.set(seat.x, seat.y - SIT_DROP, seat.z);
     this.group.rotation.y = 0; // face the cart
     this.legL.rotation.x = this.legR.rotation.x = -Math.PI / 2;
     // Small bob while eating.
@@ -97,7 +104,7 @@ export class CustomerViews {
 
   private seatOf(table: number, out: THREE.Vector3): THREE.Vector3 {
     const t = this.tables[table];
-    return out.set(t.position.x + SEAT.x, t.position.y + SEAT.y + 0.1, t.position.z + SEAT.z);
+    return out.set(t.position.x + SEAT.x, t.position.y + SEAT.y + SEAT_LIFT, t.position.z + SEAT.z);
   }
 
   /** Put a copy of the served bowl on the customer's table while they eat. */
