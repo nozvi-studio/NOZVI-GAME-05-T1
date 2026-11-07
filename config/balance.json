@@ -1,0 +1,47 @@
+{
+  "blanch": {
+    "idealSeconds": 3.0,
+    "perfectToleranceSeconds": 0.4,
+    "goodToleranceSeconds": 1.0,
+    "maxHoldSeconds": 6.0
+  },
+  "broth": {
+    "fillPerSecond": 0.5,
+    "targetFill": 0.8,
+    "perfectTolerance": 0.06,
+    "goodTolerance": 0.15,
+    "maxFill": 1.2
+  },
+  "quality": {
+    "gradeScore": { "perfect": 1.0, "good": 0.6, "bad": 0.2 },
+    "weights": { "noodles": 0.3, "broth": 0.2, "toppings": 0.35, "garnishes": 0.15 },
+    "mistakePenalty": 0.34,
+    "perfectBowlThreshold": 0.9
+  },
+  "day": {
+    "lengthSeconds": 180,
+    "revenueTarget": 250,
+    "tables": 3
+  },
+  "customers": {
+    "firstSpawnSeconds": 1.0,
+    "spawnIntervalStartSeconds": 14.0,
+    "spawnIntervalEndSeconds": 7.0,
+    "arriveSeconds": 2.0,
+    "eatSeconds": 6.0,
+    "leaveSeconds": 2.0,
+    "hurriedFromSeconds": 60,
+    "hurriedChance": 0.35,
+    "patienceSeconds": { "regular": 45, "hurried": 28 },
+    "toppingsPerOrder": [
+      { "fromSeconds": 0, "min": 1, "max": 2 },
+      { "fromSeconds": 60, "min": 2, "max": 3 },
+      { "fromSeconds": 120, "min": 3, "max": 4 }
+    ],
+    "garnishesPerOrder": { "min": 1, "max": 2 }
+  },
+  "payment": {
+    "price": 30,
+    "maxTip": 15
+  }
+}
