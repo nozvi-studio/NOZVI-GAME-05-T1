@@ -45,3 +45,6 @@ Context: the counter was one flat surface. Choice: thin zone meshes (ingredients
 
 ## 2026-11-07 — Material rule: flat for environment, smooth for hero props
 Context: `mat()` makes everything flat-shaded while steel, glass, plastic and glaze are smooth, with no stated rule (ARCH-002 VIS-203). Choice: flat shading for environment, people and raw food; smooth shading only for hero props (pots, bowl, glass, trays); metals stay low-metalness without an env map (env map deferred by the owner). Alternatives: make everything flat; make everything smooth. Consequence: new props follow this rule; no existing asset had to change in Phase 2.
+
+## 2026-11-07 — Deploy the web build to GitHub Pages with Actions
+Context: the owner wanted a shareable link without republishing a private artifact by hand. Choice: one workflow runs tests, typecheck and `vite build --base=./`, then publishes with `actions/upload-pages-artifact` and `actions/deploy-pages`; triggers are push to master and manual dispatch. Alternatives: keep the Claude artifact only; Netlify or Vercel (new accounts and secrets). Consequence: no secrets needed; the repo Pages source must be "GitHub Actions"; the `github-pages` environment may restrict deployments to master, so a feature branch needs that rule relaxed or a merge.
