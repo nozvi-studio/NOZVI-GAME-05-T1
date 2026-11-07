@@ -158,6 +158,7 @@ export function buildCart(): Cart {
   // Bowl in the middle of the counter, in front of the pot.
   const bowlView = new BowlView();
   const bowl = markInteractable(new THREE.Group(), 'bowl');
+  bowlView.group.scale.setScalar(1.15); // hero prop: slightly larger on the counter (VIS-202)
   bowl.add(bowlView.group);
   const bowlSteam = fxLayer(new Steam(0.2, 0, 0.6, 0.38, 10));
   bowlSteam.group.position.y = 0.22;

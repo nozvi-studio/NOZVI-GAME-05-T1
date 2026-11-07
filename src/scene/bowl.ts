@@ -6,7 +6,7 @@ import { BROTH_COLOR, GARNISH_COLORS, NOODLE_COLORS, RAW_NOODLE_COLOR, TOPPING_C
 import { bowlTexture } from './textures';
 
 const BOWL_H = 0.22;
-const R_BOTTOM = 0.17;
+const R_BOTTOM = 0.2; // wider foot: from above the empty bowl reads as a bowl, not a funnel (VIS-201)
 const R_TOP = 0.32;
 
 /** Small low-poly pieces for one topping (also used on the counter trays). */
@@ -63,11 +63,11 @@ export function garnishPieces(gn: Garnish, count: number, spread: number): THREE
     let piece: THREE.Mesh;
     if (gn === 'scallion') {
       // Sliced green onion rings.
-      piece = new THREE.Mesh(new THREE.TorusGeometry(0.013, 0.005, 3, 6), mat(i % 3 ? color : 0xb8e08a));
+      piece = new THREE.Mesh(new THREE.TorusGeometry(0.02, 0.008, 4, 7), mat(i % 3 ? color : 0xb8e08a));
       piece.rotation.x = -Math.PI / 2;
-    } else if (gn === 'pepper') piece = sphere(0.009, color);
+    } else if (gn === 'pepper') piece = sphere(0.014, color);
     else {
-      piece = cylinder(0.008, 0.008, 0.08, color, 4);
+      piece = cylinder(0.011, 0.011, 0.1, color, 4);
       piece.rotation.z = Math.PI / 2;
     }
     piece.position.set(Math.cos(a) * r, 0, Math.sin(a) * r);
@@ -115,7 +115,7 @@ export class BowlView {
     );
     const inner = new THREE.Mesh(
       shellGeo,
-      new THREE.MeshStandardMaterial({ color: 0xf4f1e8, roughness: 0.35, side: THREE.BackSide }),
+      new THREE.MeshStandardMaterial({ color: 0xf4f1e8, emissive: 0x6a6256, roughness: 0.35, side: THREE.BackSide }), // emissive keeps the glaze white in shade (VIS-201)
     );
     for (const m of [outer, inner]) {
       m.position.y = BOWL_H / 2;
@@ -127,7 +127,10 @@ export class BowlView {
     const rim = new THREE.Mesh(new THREE.TorusGeometry(R_TOP, 0.013, 5, 24), mat(0x2f5fa8));
     rim.rotation.x = Math.PI / 2;
     rim.position.y = BOWL_H;
-    this.group.add(outer, inner, base, rim);
+    const band = new THREE.Mesh(new THREE.TorusGeometry(R_TOP - 0.025, 0.009, 4, 24), mat(0x2f5fa8));
+    band.rotation.x = Math.PI / 2;
+    band.position.y = BOWL_H - 0.035;
+    this.group.add(outer, inner, base, rim, band);
 
     this.noodleMat = new THREE.MeshStandardMaterial({ color: NOODLE_COLORS.perfect, roughness: 0.45 });
     this.noodles = noodleNest(0.19, 0.06, this.noodleMat);
@@ -156,7 +159,8 @@ export class BowlView {
     TOPPINGS.forEach((t, i) => {
       const pieces = toppingPieces(t, 4, 0.055);
       const a = (i / TOPPINGS.length) * Math.PI * 2 + 0.4;
-      pieces.position.set(Math.cos(a) * 0.14, 0.15, Math.sin(a) * 0.14);
+      pieces.scale.setScalar(1.4); // readable at phone size (VIS-204)
+      pieces.position.set(Math.cos(a) * 0.15, 0.15, Math.sin(a) * 0.15);
       this.toppings.set(t, pieces);
       this.group.add(pieces);
     });

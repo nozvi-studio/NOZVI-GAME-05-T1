@@ -8,14 +8,15 @@
 - [x] Studio standards + AI rules snapshot in `docs/standards/`
 - [x] M1 greybox core loop playable end to end (cook → serve → day summary → replay)
 - [x] M2 visual pass: night atmosphere, cart & food detail, steam (DECISIONS 2026-11-07)
-- [x] Visual polish ARCH-002 / PLAN-001 approved; Phase 1 (readability) implemented, awaiting owner review of before/after shots
-- [ ] Visual polish Phases 2–4 (assets, lighting, juice) pending
+- [x] Visual polish ARCH-002 / PLAN-001 approved; Phase 1 (readability) accepted by owner
+- [x] Visual polish Phase 2 (bowl, ingredient scale, material rule) implemented, awaiting owner review
+- [ ] Visual polish Phases 3–4 (lighting, juice) pending
 - [ ] First playtest with 5 testers (M1 exit criterion, GDD §11)
 
 Playtest build (private, owner shares it): https://claude.ai/artifact/FD2D6yUBwNEWZixyqQERPo — built with `npx vite build --base=./`. It still serves the pre-visual-pass build until republished.
 
 ## Next (ordered, max 5)
-1. Owner review of Phase 1; then PLAN-001 Phase 2 (empty bowl, hero props, material rules)
+1. Owner review of Phase 2; then PLAN-001 Phase 3 (lighting, shadows, declutter)
 2. Run the first playtest; create `docs/PLAYTEST.md` from `docs/standards/templates/PLAYTEST.md`
 3. Retune balance from playtest data
 4. M2 juice: coin pop / tip sparkle, customer frown, sounds, haptics (GDD §6); steam done

@@ -42,3 +42,6 @@ Context: Phase 1 screenshots at 844×390 showed label pills colliding in the bot
 
 ## 2026-11-07 — Counter zones as non-interactable inlays
 Context: the counter was one flat surface. Choice: thin zone meshes (ingredients, cooking, bowl ring) in `src/scene/cartZones.ts`, not registered in `interactables`, so raycasts ignore them. Alternatives: textured counter; separate counter pieces. Consequence: zero effect on hit testing; positions are cart-local constants that must follow any future layout change.
+
+## 2026-11-07 — Material rule: flat for environment, smooth for hero props
+Context: `mat()` makes everything flat-shaded while steel, glass, plastic and glaze are smooth, with no stated rule (ARCH-002 VIS-203). Choice: flat shading for environment, people and raw food; smooth shading only for hero props (pots, bowl, glass, trays); metals stay low-metalness without an env map (env map deferred by the owner). Alternatives: make everything flat; make everything smooth. Consequence: new props follow this rule; no existing asset had to change in Phase 2.
