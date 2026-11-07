@@ -2,9 +2,10 @@ name: Deploy to GitHub Pages
 
 # Tests, type-checks and builds the game, then publishes `dist/` to GitHub Pages.
 # Runs on pushes to master and on demand (Actions tab -> Run workflow, pick a branch).
+# The work branch is listed so the build can be previewed before it is merged; remove it after the merge.
 on:
   push:
-    branches: [master]
+    branches: [master, claude/confident-faraday-owprnf]
   workflow_dispatch:
 
 permissions:
