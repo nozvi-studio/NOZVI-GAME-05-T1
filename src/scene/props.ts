@@ -55,13 +55,17 @@ export function buildTable(index: number): THREE.Group {
 
 export function buildTrash(): THREE.Group {
   const trash = markInteractable(new THREE.Group(), 'trash');
-  const bin = cylinder(0.3, 0.24, 0.7, 0x3d6b3a, 10);
+  // VIS-107: it sits close to the camera, so the visual is scaled down and toned; the hit box keeps its size.
+  const visual = new THREE.Group();
+  const bin = cylinder(0.3, 0.24, 0.7, 0x4f7a4a, 10);
   bin.position.y = 0.35;
-  const lid = cylinder(0.32, 0.32, 0.06, 0x2c4f2a, 10);
+  const lid = cylinder(0.32, 0.32, 0.06, 0x3e6339, 10);
   lid.position.y = 0.72;
-  const knob = box(0.14, 0.05, 0.05, 0x1e3a1d);
+  const knob = box(0.14, 0.05, 0.05, 0x2a4a28);
   knob.position.y = 0.77;
-  trash.add(bin, lid, knob);
+  visual.add(bin, lid, knob);
+  visual.scale.setScalar(0.72);
+  trash.add(visual);
   const hit = hitBox(0.85, 1.0, 0.85);
   hit.position.y = 0.45;
   trash.add(hit);

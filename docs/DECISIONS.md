@@ -36,3 +36,9 @@ Context: bloom/post-processing is costly on mid-range phones. Choice: ACES tone 
 
 ## 2026-11-07 — Approve visual polish spec and plan (ARCH-002, PLAN-001)
 Context: an audit of the M2 build (code review plus owner screenshots) found readability problems in floor, counter, labels, order bubbles and feedback. Choice: owner approved ARCH-002 and PLAN-001 with default answers: trash can scaled visually but not moved, no warning for extra bowl items, progress on every order bubble, env map and sound/haptics deferred, emoji icons kept with clearer picks. Alternatives: redesign the art direction; import assets. Consequence: four presentation-only phases, no change to `src/core/` or balance; Phase 1 starts now.
+
+## 2026-11-07 — Counter labels: icon pills, no fixed pot/basket labels
+Context: Phase 1 screenshots at 844×390 showed label pills colliding in the bottom row, and labels for pot and basket landing on the garnish jars (the jars hide the pot wall from the camera). Choice: pill labels with icon + word shared with the order chips; icons hidden under 480 px viewport height; topping labels spread left/right of their tray column; a fixed label only for the bowl, trash, ingredients; pot and basket are named by the hold gauge while in use. Alternatives: shrink fonts below 12 px; labels above the pots (cover the broth). Consequence: no overlapping labels on phone and desktop; first-time players rely on the FTUE hint ring for pot and basket.
+
+## 2026-11-07 — Counter zones as non-interactable inlays
+Context: the counter was one flat surface. Choice: thin zone meshes (ingredients, cooking, bowl ring) in `src/scene/cartZones.ts`, not registered in `interactables`, so raycasts ignore them. Alternatives: textured counter; separate counter pieces. Consequence: zero effect on hit testing; positions are cart-local constants that must follow any future layout change.

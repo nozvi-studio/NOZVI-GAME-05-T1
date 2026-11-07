@@ -9,7 +9,9 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: Se
 - `docs/ARCHITECTURE.md` and draft mechanic specs MEC-002…004.
 - M2 visual pass (owner-approved, visuals only): night street lighting (warm key + cool rim, street lamp, festoon bulbs over the tables, hanging bulb over the cart, flicker), tiled sidewalk / asphalt / curb / puddles, parked scooters, CSS vignette, ACES tone mapping.
 - Cart & food: stainless pots with visible simmering broth (daikon, bone, fat droplets), boiling water bubbles, steam from the broth pot, water pot (stronger while blanching) and the bowl once broth is in; glass cabinet with noodles and herbs; stainless topping pans; patterned bowl; noodle-strand nests instead of blobs; better shrimp, pork, egg, scallion pieces; spare bowls, chopsticks and chili sauce; spoked wheels; nicer plastic tables and stools.
+- Visual polish Phase 1 (ARCH-002 / PLAN-001, presentation only): order chips show done / not done against the current bowl and a fully satisfied bubble gets a green outline; open garnish jars with visible contents; soft counter zones and a bowl ring; counter label pills with icons; `orderProgress` helper with 6 unit tests.
 ### Changed
+- Phase 1: bubbles and floating text anchor to the seated head instead of a standing height; floor grout softened, tiles enlarged and the floor dimmed; counter darkened and matte with dark tray liners; trash can scaled down and toned (hit box unchanged); clearer icons for liver and pepper.
 - Red awning removed (it hid seated customers); replaced by a slim pipe with a shaded bulb.
 - `AGENTS.md`, `README.md`, `docs/README.md` point agents to `docs/standards/` as binding rules.
 - Camera moved closer and tables pulled toward the cart so tap targets stay usable on landscape phones; HUD text scales with viewport height.

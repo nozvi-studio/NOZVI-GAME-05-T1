@@ -12,6 +12,7 @@ import {
 } from './cartParts';
 import { GARNISH_COLORS } from './palette';
 import { box, cylinder, hitBox, markInteractable } from './primitives';
+import { buildCounterZones } from './cartZones';
 import { Steam } from './steam';
 
 /** Local y of the counter top surface. */
@@ -83,14 +84,15 @@ function buildJar(gn: (typeof GARNISHES)[number]): THREE.Group {
   );
   glass.position.y = 0.14;
   const fillColor = GARNISH_COLORS[gn];
-  const content = cylinder(0.15, 0.15, 0.16, fillColor, 12);
-  content.position.y = 0.09;
-  const top = garnishPieces(gn, 14, 0.13);
-  top.position.y = 0.18;
-  // Lid colour also tells the jars apart, alongside the DOM labels (not colour-only).
-  const lid = cylinder(0.18, 0.18, 0.05, gn === 'pepper' ? 0xb33a2b : gn === 'scallion' ? 0x2e7d32 : 0xd9a441, 12);
-  lid.position.y = 0.31;
-  jar.add(glass, content, top, lid);
+  // VIS-107: open jar. The garnish itself is the colour cue (no big lid hiding it from the camera).
+  const content = cylinder(0.15, 0.15, 0.2, fillColor, 12);
+  content.position.y = 0.11;
+  const top = garnishPieces(gn, 22, 0.13);
+  top.position.y = 0.22;
+  const rim = new THREE.Mesh(new THREE.TorusGeometry(0.17, 0.012, 5, 16), steelMat(0xd0d4d8));
+  rim.rotation.x = Math.PI / 2;
+  rim.position.y = 0.28;
+  jar.add(glass, content, top, rim);
   addHit(jar, 0.48, 0.55, 0.45, 0.2);
   return jar;
 }
@@ -119,7 +121,7 @@ export function buildCart(): Cart {
   counter.castShadow = true;
   const edge = box(3.72, 0.03, 0.04, 0xd8d6d0);
   edge.position.set(0, 1.285, 0.85);
-  group.add(body, trim, band, counter, edge);
+  group.add(body, trim, band, counter, edge, buildCounterZones(COUNTER_TOP));
 
   // Glass display case at the back-left, behind the topping trays.
   const cabinet = buildCabinet();
