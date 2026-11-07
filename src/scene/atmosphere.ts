@@ -46,11 +46,11 @@ export function buildGround(): THREE.Group {
   const g = new THREE.Group();
 
   const sidewalkTex = sidewalkTexture().clone();
-  sidewalkTex.repeat.set(15, 4);
+  sidewalkTex.repeat.set(10, 2.67); // ~0.75 world units per tile, not the 0.5 of the topping trays (VIS-103)
   sidewalkTex.needsUpdate = true;
   const sidewalk = new THREE.Mesh(
     new THREE.BoxGeometry(30, 0.2, 8),
-    new THREE.MeshStandardMaterial({ map: sidewalkTex, roughness: 0.92 }),
+    new THREE.MeshStandardMaterial({ map: sidewalkTex, color: 0xa89c94, roughness: 0.92 }), // dimmed so the cart is the brightest area
   );
   sidewalk.position.set(0, 0, 1);
   sidewalk.receiveShadow = true;

@@ -76,8 +76,9 @@ export function sidewalkTexture(): THREE.Texture {
         }
       }
     }
-    ctx.strokeStyle = 'rgba(40,30,24,0.8)';
-    ctx.lineWidth = 3;
+    // VIS-103: grout is a soft seam, not a dark grid that competes with trays and table rims.
+    ctx.strokeStyle = 'rgba(40,30,24,0.28)';
+    ctx.lineWidth = 2;
     for (let i = 0; i <= n; i++) {
       ctx.beginPath();
       ctx.moveTo(i * cell, 0);

@@ -38,6 +38,10 @@ export interface Cart {
   update(dt: number, time: number, fx: CartFxState): void;
 }
 
+const COUNTER_MAT = new THREE.MeshStandardMaterial({ color: 0x77706a, roughness: 0.55, metalness: 0.15 });
+/** Dark matte tray floor: toppings read against it, the bright steel lip still outlines the tray. */
+const TRAY_LINER_MAT = new THREE.MeshStandardMaterial({ color: 0x4b4640, roughness: 0.75 });
+
 function addHit(root: THREE.Object3D, w: number, h: number, d: number, y: number, z = 0): void {
   const hit = hitBox(w, h, d);
   hit.position.set(0, y, z);
@@ -55,7 +59,7 @@ function buildTray(t: (typeof TOPPINGS)[number]): THREE.Group {
   // Stainless gastronorm pan with a raised lip.
   const W = 0.52;
   const D = 0.46;
-  const pan = new THREE.Mesh(new THREE.BoxGeometry(W, 0.03, D), steelMat(0xb9bec4));
+  const pan = new THREE.Mesh(new THREE.BoxGeometry(W, 0.03, D), TRAY_LINER_MAT);
   pan.position.y = 0.015;
   pan.receiveShadow = true;
   tray.add(pan);
@@ -108,7 +112,8 @@ export function buildCart(): Cart {
   trim.position.y = 1.0;
   const band = box(3.42, 0.12, 1.12, 0xc0392b);
   band.position.y = 0.42;
-  const counter = new THREE.Mesh(new THREE.BoxGeometry(3.7, 0.08, 1.5), steelMat(0xb5b2aa));
+  // VIS-104: a darker, matte work surface so food and trays stand out and nothing clips to white.
+  const counter = new THREE.Mesh(new THREE.BoxGeometry(3.7, 0.08, 1.5), COUNTER_MAT);
   counter.position.set(0, 1.24, 0.1);
   counter.receiveShadow = true;
   counter.castShadow = true;
