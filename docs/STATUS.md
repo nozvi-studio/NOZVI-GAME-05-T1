@@ -8,6 +8,7 @@
 - [x] Studio standards + AI rules snapshot in `docs/standards/`
 - [x] M1 greybox core loop playable end to end (cook → serve → day summary → replay)
 - [x] M2 visual pass: night atmosphere, cart & food detail, steam (DECISIONS 2026-11-07)
+- [ ] Visual polish: ARCH-002 spec and PLAN-001 drafted from the 2026-11-07 audit; waiting for owner approval and answers to ARCH-002 §7 before Phase 1
 - [ ] First playtest with 5 testers (M1 exit criterion, GDD §11)
 
 Playtest build (private, owner shares it): https://claude.ai/artifact/FD2D6yUBwNEWZixyqQERPo — built with `npx vite build --base=./`. It still serves the pre-visual-pass build until republished.

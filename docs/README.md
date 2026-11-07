@@ -1,5 +1,5 @@
 # Docs map (read this instead of scanning docs/)
-Updated: 2026-11-06
+Updated: 2026-11-07
 
 ## 1. Document index
 Only files listed here exist. Status: Draft / Approved / Deprecated.
@@ -15,6 +15,8 @@ Only files listed here exist. Status: Draft / Approved / Deprecated.
 | MEC-002 | `docs/specs/mechanics/MEC-002-bowl-assembly.md` | Bowl assembly rules, quality formula | Approved |
 | MEC-003 | `docs/specs/mechanics/MEC-003-customers.md` | Customers, patience, day flow | Approved |
 | MEC-004 | `docs/specs/mechanics/MEC-004-serve-payment.md` | Serving and payment | Approved |
+| ARCH-002 | `docs/specs/ARCH-002-visual-readability-and-feedback.md` | Visual readability, polish and feedback requirements (VIS-xxx), acceptance, open owner questions | Draft |
+| PLAN-001 | `docs/plans/PLAN-001-visual-polish.md` | Ordered implementation plan for ARCH-002 (4 phases) | Draft |
 | STD | `docs/standards/README.md` | Studio standards + AI rules index (binding) | Approved |
 | STD-00…09 | `docs/standards/0x-*.md` | Governance, templates 01–06, agent workflow, setup manifest, ruleset changelog | Approved |
 | TPL | `docs/standards/templates/` | Verbatim setup-file templates (incl. PLAYTEST) | Approved |
@@ -27,7 +29,7 @@ Read the "First" column; open "Then" only if the task needs it. Never read every
 | Gameplay bug | MEC spec (or GDD §) for that behavior | CODEMAP module row → that module's files + tests |
 | Balance / tuning | GDD §7, balance config | MEC spec §9 |
 | Refactor | CODEMAP, ARCHITECTURE | DECISIONS (grep topic), module tests |
-| UI / juice | GDD §6, §10 | CODEMAP ui row |
+| UI / juice | GDD §6, §10 | ARCH-002 (VIS requirements), PLAN-001, CODEMAP ui row |
 | Analytics / ads / SDK | INT spec | GDD §9, §12; CODEMAP integrations row |
 | Playtest follow-up | PLAYTEST (latest entry only) | GDD §12 |
 | Release | STATUS, CHANGELOG [Unreleased] | Test results, INT specs |
