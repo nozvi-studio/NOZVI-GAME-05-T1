@@ -10,7 +10,7 @@
 - [x] M2 visual pass: night atmosphere, cart & food detail, steam (DECISIONS 2026-11-07)
 - [ ] First playtest with 5 testers (M1 exit criterion, GDD §11)
 
-Playtest build (private, owner shares it): https://claude.ai/artifact/FD2D6yUBwNEWZixyqQERPo — built with `npx vite build --base=./`. It still serves the pre-visual-pass build until republished.
+Playtest build (private, owner shares it): https://claude.ai/artifact/FD2D6yUBwNEWZixyqQERPo — built with `npx vite build --base=./`. Updated 2026-11-07 with the night visual pass (commit 08f4e24).
 
 ## Next (ordered, max 5)
 1. Run the first playtest; create `docs/PLAYTEST.md` from `docs/standards/templates/PLAYTEST.md`
