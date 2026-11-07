@@ -33,3 +33,6 @@ Context: owner asked to improve the gameplay look now; GDD §11 puts art in M2. 
 
 ## 2026-11-07 — Night look without post-processing
 Context: bloom/post-processing is costly on mid-range phones. Choice: ACES tone mapping, a few non-shadow point lights, one shadow-casting directional light, additive halo sprites for bulbs and a CSS vignette. Steam/halo sprites live on render layer 1 so pointer raycasts (layer 0) never hit them. Alternatives: UnrealBloomPass; baked light maps. Consequence: cheap, no new dependencies; glow is faked.
+
+## 2026-11-07 — Approve visual polish spec and plan (ARCH-002, PLAN-001)
+Context: an audit of the M2 build (code review plus owner screenshots) found readability problems in floor, counter, labels, order bubbles and feedback. Choice: owner approved ARCH-002 and PLAN-001 with default answers: trash can scaled visually but not moved, no warning for extra bowl items, progress on every order bubble, env map and sound/haptics deferred, emoji icons kept with clearer picks. Alternatives: redesign the art direction; import assets. Consequence: four presentation-only phases, no change to `src/core/` or balance; Phase 1 starts now.

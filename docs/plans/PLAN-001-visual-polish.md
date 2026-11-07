@@ -1,9 +1,9 @@
 ---
 id: PLAN-001
 type: plan
-status: draft
+status: approved
 owner: tech-lead
-version: 0.1
+version: 0.2
 parent: ARCH-002
 related: [GDD, ARCH-001]
 studio_standard: 0.1

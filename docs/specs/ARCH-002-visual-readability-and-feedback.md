@@ -1,9 +1,9 @@
 ---
 id: ARCH-002
 type: architecture
-status: draft
+status: approved
 owner: tech-lead
-version: 0.1
+version: 0.2
 parent: GDD
 related: [ARCH-001, PLAN-001]
 studio_standard: 0.1
@@ -11,7 +11,7 @@ updated: 2026-11-07
 ---
 # ARCH-002 — Visual readability, polish and feedback (M2)
 
-> Presentation only. This spec adds no gameplay rule and changes no balance value. It realizes GDD §6 (juice) and §10 (art, audio, UI direction) on top of ARCH-001. Status stays `draft` until the owner approves it (AGENTS §7b, `07-agent-workflow.md` change workflow).
+> Presentation only. This spec adds no gameplay rule and changes no balance value. It realizes GDD §6 (juice) and §10 (art, audio, UI direction) on top of ARCH-001. Approved by the owner on 2026-11-07 with the default answers in §7. Phase 1 may start; VIS-206 and VIS-408 stay deferred.
 
 ## 1. Scope and constraints
 - In scope: `src/scene/`, `src/ui/`, `src/input/`, `src/game/` (wiring only), `index.html` styles.
@@ -108,12 +108,12 @@ Per phase, before merge (AGENTS §6b):
 4. Pointer behavior unchanged: press, release, tap, drag-drop still work (smoke run).
 5. Docs sync: CODEMAP, STATUS, CHANGELOG; DECISIONS for each non-obvious choice.
 
-## 7. Open questions for the owner
-1. **Trash can position.** VIS-107 only scales it visually. Moving it changes layout (DECISIONS 2026-11-06 "Tighter framing"). Approve a move?
-2. **Extra items in the bowl.** Chips show done / not done. Should an item the order does not ask for show a warning state (helps players, reveals a quality penalty)?
-3. **Progress on every bubble or only one.** Default: every bubble shows progress against the current bowl. Confirm.
-4. **Env map (VIS-206)** and **sound / haptics (VIS-408)**: approve or defer.
-5. **Icon set.** Emoji today (🟤 liver, ⚫ pepper are ambiguous). Keep emoji with better picks, or draw small icons on a canvas?
+## 7. Owner decisions (2026-11-07, "use defaults")
+1. **Trash can position:** not moved. VIS-107 scales only the visual; the hit box and position stay (DECISIONS 2026-11-06 "Tighter framing").
+2. **Extra items in the bowl:** no warning state. Chips show only done / not done.
+3. **Progress on bubbles:** every bubble shows progress against the current bowl.
+4. **Env map (VIS-206) and sound / haptics (VIS-408):** deferred. Revisit before Phase 2 (env map) and Phase 4 (sound, haptics).
+5. **Icon set:** keep emoji, replace the ambiguous ones (🟤 liver, ⚫ pepper) with clearer picks, shared by bubbles and labels.
 
 ## Linked design requirements
 GDD §3 (readable controls), §3b (FTUE hint), §6 (feedback table), §10 (art, UI). MEC-002 (bowl contents, read only), MEC-003 (customer states, read only).

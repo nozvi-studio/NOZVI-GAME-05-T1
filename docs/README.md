@@ -15,8 +15,8 @@ Only files listed here exist. Status: Draft / Approved / Deprecated.
 | MEC-002 | `docs/specs/mechanics/MEC-002-bowl-assembly.md` | Bowl assembly rules, quality formula | Approved |
 | MEC-003 | `docs/specs/mechanics/MEC-003-customers.md` | Customers, patience, day flow | Approved |
 | MEC-004 | `docs/specs/mechanics/MEC-004-serve-payment.md` | Serving and payment | Approved |
-| ARCH-002 | `docs/specs/ARCH-002-visual-readability-and-feedback.md` | Visual readability, polish and feedback requirements (VIS-xxx), acceptance, open owner questions | Draft |
-| PLAN-001 | `docs/plans/PLAN-001-visual-polish.md` | Ordered implementation plan for ARCH-002 (4 phases) | Draft |
+| ARCH-002 | `docs/specs/ARCH-002-visual-readability-and-feedback.md` | Visual readability, polish and feedback requirements (VIS-xxx), acceptance, owner decisions | Approved |
+| PLAN-001 | `docs/plans/PLAN-001-visual-polish.md` | Ordered implementation plan for ARCH-002 (4 phases) | Approved |
 | STD | `docs/standards/README.md` | Studio standards + AI rules index (binding) | Approved |
 | STD-00…09 | `docs/standards/0x-*.md` | Governance, templates 01–06, agent workflow, setup manifest, ruleset changelog | Approved |
 | TPL | `docs/standards/templates/` | Verbatim setup-file templates (incl. PLAYTEST) | Approved |
