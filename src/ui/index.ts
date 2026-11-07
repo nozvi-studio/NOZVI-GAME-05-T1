@@ -3,8 +3,9 @@ import { HintRing, SummaryOverlay, WorldLabels, floatText } from './fx';
 import { injectStyles } from './styles';
 import { HoldGauge, Hud, OrderBubbles, el, type ScreenPoint } from './widgets';
 
-export { STR, TOPPING_LABEL, GARNISH_LABEL, GRADE_LABEL, money } from './strings';
+export { STR, TOPPING_LABEL, GARNISH_LABEL, TOPPING_ICON, GARNISH_ICON, OBJECT_ICON, GRADE_LABEL, money } from './strings';
 export type { BubbleData, GaugeData, ScreenPoint } from './widgets';
+export { orderProgress } from './orderProgress';
 export type { WorldLabel } from './fx';
 
 /** DOM overlay above the canvas. Takes screen positions only; never touches Three.js. */

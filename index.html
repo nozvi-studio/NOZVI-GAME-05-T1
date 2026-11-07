@@ -7,6 +7,9 @@
     <style>
       html, body { margin: 0; height: 100%; overflow: hidden; background: #1b1410; }
       canvas { display: block; touch-action: none; }
+      /* Night vignette over the 3D view, under the UI overlay (GDD §10). */
+      body::before { content: ""; position: fixed; inset: 0; pointer-events: none;
+        background: radial-gradient(ellipse at 50% 60%, rgba(0,0,0,0) 45%, rgba(6,4,12,.55) 100%); }
     </style>
   </head>
   <body>

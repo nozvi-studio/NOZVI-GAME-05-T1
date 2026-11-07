@@ -27,3 +27,24 @@ Context: bot probe over 30 seeds showed 300k needs ≤ ~17 s per bowl. Choice: `
 
 ## 2026-11-06 — Owner approved MEC-002…004 and GDD §2/§7 additions
 Context: specs were drafted by the agent from the approved GDD. Choice: owner approved the specs, the topping list, the balance table and the 250k day target. Alternatives: none. Consequence: these are now the implementation baseline; further rule changes need owner approval.
+
+## 2026-11-07 — Start M2 visuals before the M1 playtest
+Context: owner asked to improve the gameplay look now; GDD §11 puts art in M2. Choice: owner approved a visuals-only pass (night atmosphere, cart and food, steam) with no rule, balance or layout changes; sound and haptics stay deferred. Alternatives: wait for the M1 playtest; import CC0 glTF assets. Consequence: still zero external assets (procedural canvas textures, primitives); bundle 141 kB gzip; the M1 playtest now runs on the nicer build.
+
+## 2026-11-07 — Night look without post-processing
+Context: bloom/post-processing is costly on mid-range phones. Choice: ACES tone mapping, a few non-shadow point lights, one shadow-casting directional light, additive halo sprites for bulbs and a CSS vignette. Steam/halo sprites live on render layer 1 so pointer raycasts (layer 0) never hit them. Alternatives: UnrealBloomPass; baked light maps. Consequence: cheap, no new dependencies; glow is faked.
+
+## 2026-11-07 — Approve visual polish spec and plan (ARCH-002, PLAN-001)
+Context: an audit of the M2 build (code review plus owner screenshots) found readability problems in floor, counter, labels, order bubbles and feedback. Choice: owner approved ARCH-002 and PLAN-001 with default answers: trash can scaled visually but not moved, no warning for extra bowl items, progress on every order bubble, env map and sound/haptics deferred, emoji icons kept with clearer picks. Alternatives: redesign the art direction; import assets. Consequence: four presentation-only phases, no change to `src/core/` or balance; Phase 1 starts now.
+
+## 2026-11-07 — Counter labels: icon pills, no fixed pot/basket labels
+Context: Phase 1 screenshots at 844×390 showed label pills colliding in the bottom row, and labels for pot and basket landing on the garnish jars (the jars hide the pot wall from the camera). Choice: pill labels with icon + word shared with the order chips; icons hidden under 480 px viewport height; topping labels spread left/right of their tray column; a fixed label only for the bowl, trash, ingredients; pot and basket are named by the hold gauge while in use. Alternatives: shrink fonts below 12 px; labels above the pots (cover the broth). Consequence: no overlapping labels on phone and desktop; first-time players rely on the FTUE hint ring for pot and basket.
+
+## 2026-11-07 — Counter zones as non-interactable inlays
+Context: the counter was one flat surface. Choice: thin zone meshes (ingredients, cooking, bowl ring) in `src/scene/cartZones.ts`, not registered in `interactables`, so raycasts ignore them. Alternatives: textured counter; separate counter pieces. Consequence: zero effect on hit testing; positions are cart-local constants that must follow any future layout change.
+
+## 2026-11-07 — Material rule: flat for environment, smooth for hero props
+Context: `mat()` makes everything flat-shaded while steel, glass, plastic and glaze are smooth, with no stated rule (ARCH-002 VIS-203). Choice: flat shading for environment, people and raw food; smooth shading only for hero props (pots, bowl, glass, trays); metals stay low-metalness without an env map (env map deferred by the owner). Alternatives: make everything flat; make everything smooth. Consequence: new props follow this rule; no existing asset had to change in Phase 2.
+
+## 2026-11-07 — Deploy the web build to GitHub Pages with Actions
+Context: the owner wanted a shareable link without republishing a private artifact by hand. Choice: one workflow runs tests, typecheck and `vite build --base=./`, then publishes with `actions/upload-pages-artifact` and `actions/deploy-pages`; triggers are push to master and manual dispatch. Alternatives: keep the Claude artifact only; Netlify or Vercel (new accounts and secrets). Consequence: no secrets needed; the repo Pages source must be "GitHub Actions"; the `github-pages` environment may restrict deployments to master, so a feature branch needs that rule relaxed or a merge.

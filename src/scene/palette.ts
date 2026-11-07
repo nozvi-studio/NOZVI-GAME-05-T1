@@ -20,5 +20,5 @@ export const NOODLE_COLORS: Record<Grade, number> = {
   bad: 0xb9a88a,
 };
 
-export const BROTH_COLOR = 0xd08a3a;
+export const BROTH_COLOR = 0xd9a24e;
 export const RAW_NOODLE_COLOR = 0xfaf3dc;

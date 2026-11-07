@@ -1,4 +1,5 @@
 import type { Order } from '../core/types';
+import type { OrderProgress } from './orderProgress';
 import { GARNISH_ICON, GARNISH_LABEL, STR, TOPPING_ICON, TOPPING_LABEL, clock, money } from './strings';
 
 /** Approximate bottom edge of the HUD bar, in CSS px. */
@@ -45,11 +46,20 @@ export interface BubbleData {
   /** 0..1 */
   patience: number;
   hurried: boolean;
+  /** What the current bowl already holds for this order (VIS-102). */
+  progress: OrderProgress;
+}
+
+interface BubbleView {
+  root: HTMLDivElement;
+  bar: HTMLDivElement;
+  toppingChips: HTMLSpanElement[];
+  garnishChips: HTMLSpanElement[];
 }
 
 /** One order bubble per waiting customer, above its table (icons + labels, not colour-only). */
 export class OrderBubbles {
-  private bubbles = new Map<number, { root: HTMLDivElement; bar: HTMLDivElement }>();
+  private bubbles = new Map<number, BubbleView>();
 
   constructor(private root: HTMLElement) {}
 
@@ -71,6 +81,9 @@ export class OrderBubbles {
       const p = Math.max(0, Math.min(1, b.patience));
       bubble.bar.style.width = `${p * 100}%`;
       bubble.bar.style.backgroundColor = p > 0.5 ? '#3fbf5a' : p > 0.25 ? '#e8c547' : '#e04848';
+      b.progress.toppings.forEach((done, i) => bubble.toppingChips[i]?.classList.toggle('done', done));
+      b.progress.garnishes.forEach((done, i) => bubble.garnishChips[i]?.classList.toggle('done', done));
+      bubble.root.classList.toggle('ready', b.progress.ready);
     }
     for (const [id, bubble] of this.bubbles) {
       if (!seen.has(id)) {
@@ -80,16 +93,24 @@ export class OrderBubbles {
     }
   }
 
-  private create(b: BubbleData) {
+  private create(b: BubbleData): BubbleView {
     const root = el('div', 'htg-bubble', this.root);
     const tops = el('div', 'row', root);
-    for (const t of b.order.toppings) el('span', 'htg-chip', tops).textContent = `${TOPPING_ICON[t]} ${TOPPING_LABEL[t]}`;
+    const toppingChips = b.order.toppings.map((t) => {
+      const chip = el('span', 'htg-chip', tops);
+      chip.textContent = `${TOPPING_ICON[t]} ${TOPPING_LABEL[t]}`;
+      return chip;
+    });
     const gars = el('div', 'row', root);
-    for (const g of b.order.garnishes) el('span', 'htg-chip g', gars).textContent = `${GARNISH_ICON[g]} ${GARNISH_LABEL[g]}`;
+    const garnishChips = b.order.garnishes.map((g) => {
+      const chip = el('span', 'htg-chip g', gars);
+      chip.textContent = `${GARNISH_ICON[g]} ${GARNISH_LABEL[g]}`;
+      return chip;
+    });
     if (b.hurried) el('span', 'tag', root).textContent = STR.hurried;
     const track = el('div', 'htg-patience', root);
     const bar = el('div', '', track);
-    return { root, bar };
+    return { root, bar, toppingChips, garnishChips };
   }
 }
 

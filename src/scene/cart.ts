@@ -1,11 +1,30 @@
 import * as THREE from 'three';
 import { GARNISHES, TOPPINGS } from '../core/types';
 import { BasketView, BowlView, garnishPieces, toppingPieces } from './bowl';
+import {
+  buildBrothPotModel,
+  buildCabinet,
+  buildCartLamp,
+  buildCounterProps,
+  buildWaterPotModel,
+  buildWheel,
+  steelMat,
+} from './cartParts';
 import { GARNISH_COLORS } from './palette';
 import { box, cylinder, hitBox, markInteractable } from './primitives';
+import { buildCounterZones } from './cartZones';
+import { Steam } from './steam';
 
 /** Local y of the counter top surface. */
 export const COUNTER_TOP = 1.28;
+
+/** Steam and decoration are drawn on this layer so pointer raycasts (layer 0) ignore them. */
+export const FX_LAYER = 1;
+
+export interface CartFxState {
+  blanching: boolean;
+  bowlSteaming: boolean;
+}
 
 export interface Cart {
   group: THREE.Group;
@@ -16,7 +35,13 @@ export interface Cart {
   /** Hint anchors for grouped targets (topping trays, garnish jars). */
   toppingsAnchor: THREE.Object3D;
   garnishesAnchor: THREE.Object3D;
+  /** Visual-only animation: steam, boiling bubbles, bulb flicker. */
+  update(dt: number, time: number, fx: CartFxState): void;
 }
+
+const COUNTER_MAT = new THREE.MeshStandardMaterial({ color: 0x77706a, roughness: 0.55, metalness: 0.15 });
+/** Dark matte tray floor: toppings read against it, the bright steel lip still outlines the tray. */
+const TRAY_LINER_MAT = new THREE.MeshStandardMaterial({ color: 0x4b4640, roughness: 0.75 });
 
 function addHit(root: THREE.Object3D, w: number, h: number, d: number, y: number, z = 0): void {
   const hit = hitBox(w, h, d);
@@ -24,13 +49,29 @@ function addHit(root: THREE.Object3D, w: number, h: number, d: number, y: number
   root.add(hit);
 }
 
+/** Puts every sprite of a steam emitter on the FX layer. */
+function fxLayer(steam: Steam): Steam {
+  steam.group.traverse((o) => o.layers.set(FX_LAYER));
+  return steam;
+}
+
 function buildTray(t: (typeof TOPPINGS)[number]): THREE.Group {
   const tray = markInteractable(new THREE.Group(), `topping:${t}`);
-  const pan = box(0.52, 0.06, 0.46, 0xc7c7c7);
-  pan.position.y = 0.03;
-  const pieces = toppingPieces(t, 9, 0.18);
-  pieces.position.y = 0.08;
-  tray.add(pan, pieces);
+  // Stainless gastronorm pan with a raised lip.
+  const W = 0.52;
+  const D = 0.46;
+  const pan = new THREE.Mesh(new THREE.BoxGeometry(W, 0.03, D), TRAY_LINER_MAT);
+  pan.position.y = 0.015;
+  pan.receiveShadow = true;
+  tray.add(pan);
+  for (const [w, d, x, z] of [[W, 0.02, 0, D / 2], [W, 0.02, 0, -D / 2], [0.02, D, W / 2, 0], [0.02, D, -W / 2, 0]]) {
+    const lip = new THREE.Mesh(new THREE.BoxGeometry(w, 0.06, d), steelMat(0xd0d4d8));
+    lip.position.set(x, 0.04, z);
+    tray.add(lip);
+  }
+  const pieces = toppingPieces(t, 14, 0.19);
+  pieces.position.y = 0.05;
+  tray.add(pieces);
   addHit(tray, 0.6, 0.4, 0.55, 0.15);
   return tray;
 }
@@ -38,19 +79,20 @@ function buildTray(t: (typeof TOPPINGS)[number]): THREE.Group {
 function buildJar(gn: (typeof GARNISHES)[number]): THREE.Group {
   const jar = markInteractable(new THREE.Group(), `garnish:${gn}`);
   const glass = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.17, 0.17, 0.28, 10),
-    new THREE.MeshStandardMaterial({ color: 0xdff1ff, transparent: true, opacity: 0.35 }),
+    new THREE.CylinderGeometry(0.17, 0.17, 0.28, 14),
+    new THREE.MeshStandardMaterial({ color: 0xdff1ff, transparent: true, opacity: 0.28, roughness: 0.05, depthWrite: false }),
   );
   glass.position.y = 0.14;
   const fillColor = GARNISH_COLORS[gn];
-  const content = cylinder(0.15, 0.15, 0.16, fillColor, 10);
-  content.position.y = 0.09;
-  const top = garnishPieces(gn, 10, 0.12);
-  top.position.y = 0.18;
-  // Lid colour also tells the jars apart, alongside the DOM labels (not colour-only).
-  const lid = cylinder(0.18, 0.18, 0.05, gn === 'pepper' ? 0xb33a2b : gn === 'scallion' ? 0x2e7d32 : 0xd9a441, 10);
-  lid.position.y = 0.31;
-  jar.add(glass, content, top, lid);
+  // VIS-107: open jar. The garnish itself is the colour cue (no big lid hiding it from the camera).
+  const content = cylinder(0.15, 0.15, 0.2, fillColor, 12);
+  content.position.y = 0.11;
+  const top = garnishPieces(gn, 22, 0.13);
+  top.position.y = 0.22;
+  const rim = new THREE.Mesh(new THREE.TorusGeometry(0.17, 0.012, 5, 16), steelMat(0xd0d4d8));
+  rim.rotation.x = Math.PI / 2;
+  rim.position.y = 0.28;
+  jar.add(glass, content, top, rim);
   addHit(jar, 0.48, 0.55, 0.45, 0.2);
   return jar;
 }
@@ -65,41 +107,48 @@ export function buildCart(): Cart {
     if (obj.userData.interactable) interactables.set(obj.userData.interactable as string, obj);
   };
 
-  const body = box(3.4, 0.9, 1.1, 0x2f6fa8);
+  // Body: blue painted cabinet, yellow trim, red accent band, stainless counter.
+  const body = box(3.4, 0.9, 1.1, 0x2a64a0);
   body.position.y = 0.75;
-  const trim = box(3.42, 0.08, 1.12, 0xe8b04a);
+  const trim = box(3.42, 0.07, 1.12, 0xe8b04a);
   trim.position.y = 1.0;
-  const counter = box(3.7, 0.08, 1.5, 0xd9c6a5);
+  const band = box(3.42, 0.12, 1.12, 0xc0392b);
+  band.position.y = 0.42;
+  // VIS-104: a darker, matte work surface so food and trays stand out and nothing clips to white.
+  const counter = new THREE.Mesh(new THREE.BoxGeometry(3.7, 0.08, 1.5), COUNTER_MAT);
   counter.position.set(0, 1.24, 0.1);
-  group.add(body, trim, counter);
+  counter.receiveShadow = true;
+  counter.castShadow = true;
+  const edge = box(3.72, 0.03, 0.04, 0xd8d6d0);
+  edge.position.set(0, 1.285, 0.85);
+  group.add(body, trim, band, counter, edge, buildCounterZones(COUNTER_TOP));
 
   // Glass display case at the back-left, behind the topping trays.
-  const glass = new THREE.Mesh(
-    new THREE.BoxGeometry(1.15, 0.55, 0.4),
-    new THREE.MeshStandardMaterial({ color: 0xbfe3ff, transparent: true, opacity: 0.3 }),
-  );
-  glass.position.set(-1.15, COUNTER_TOP + 0.28, -0.42);
-  group.add(glass);
+  const cabinet = buildCabinet();
+  cabinet.position.set(-1.15, COUNTER_TOP, -0.42);
+  group.add(cabinet);
+
+  // Hanging bulb over the counter, placed in the gap between the left and middle customers.
+  const lamp = buildCartLamp(new THREE.Vector3(-1.15, COUNTER_TOP + 0.55, -0.55), new THREE.Vector3(-0.6, 2.75, -0.55));
+  group.add(lamp.group);
+
+  group.add(buildCounterProps().translateY(COUNTER_TOP));
 
   // Broth pot (hold to pour).
   const pot = markInteractable(new THREE.Group(), 'pot');
-  const potBody = cylinder(0.4, 0.36, 0.5, 0x9a9a9a, 12);
-  potBody.position.y = 0.25;
-  const brothTop = cylinder(0.37, 0.37, 0.02, 0xc77f35, 12);
-  brothTop.position.y = 0.47;
-  const ladle = cylinder(0.03, 0.03, 0.7, 0x6b4a2b, 6);
-  ladle.position.set(0.15, 0.6, 0.1);
-  ladle.rotation.z = -0.4;
-  pot.add(potBody, brothTop, ladle);
+  pot.add(buildBrothPotModel());
+  const potSteam = fxLayer(new Steam(0.3, 4, 0.8, 0.42));
+  potSteam.group.position.y = 0.5;
+  pot.add(potSteam.group);
   addHit(pot, 0.9, 0.8, 0.9, 0.35);
   add(pot, 0.7, -0.2);
 
   // Small water pot and the noodle basket that dips into it (hold to blanch, drag to bowl).
-  const waterPot = cylinder(0.3, 0.27, 0.36, 0x8d8d8d, 10);
-  waterPot.position.set(1.45, COUNTER_TOP + 0.18, -0.25);
-  const water = cylinder(0.27, 0.27, 0.02, 0x9fc6d1, 10);
-  water.position.set(1.45, COUNTER_TOP + 0.35, -0.25);
-  group.add(waterPot, water);
+  const waterPot = buildWaterPotModel();
+  waterPot.group.position.set(1.45, COUNTER_TOP, -0.25);
+  const waterSteam = fxLayer(new Steam(0.22, 2, 0.9, 0.4));
+  waterSteam.group.position.set(1.45, COUNTER_TOP + 0.38, -0.25);
+  group.add(waterPot.group, waterSteam.group);
   const basketView = new BasketView();
   const basket = markInteractable(new THREE.Group(), 'basket');
   basket.add(basketView.group);
@@ -109,7 +158,11 @@ export function buildCart(): Cart {
   // Bowl in the middle of the counter, in front of the pot.
   const bowlView = new BowlView();
   const bowl = markInteractable(new THREE.Group(), 'bowl');
+  bowlView.group.scale.setScalar(1.15); // hero prop: slightly larger on the counter (VIS-202)
   bowl.add(bowlView.group);
+  const bowlSteam = fxLayer(new Steam(0.2, 0, 0.6, 0.38, 10));
+  bowlSteam.group.position.y = 0.22;
+  bowl.add(bowlSteam.group);
   addHit(bowl, 0.75, 0.45, 0.65, 0.18);
   add(bowl, -0.1, 0.45);
 
@@ -124,21 +177,29 @@ export function buildCart(): Cart {
   GARNISHES.forEach((gn, i) => add(buildJar(gn), 0.45 + i * 0.5, 0.58));
   add(garnishesAnchor, 0.95, 0.58, COUNTER_TOP + 0.2);
 
-  // Awning leans away from the player so it never hides the counter.
-  const roof = box(3.9, 0.05, 0.55, 0xc0392b);
-  roof.position.set(0, 2.75, -0.55);
-  roof.rotation.x = -0.45;
-  group.add(roof);
-  for (const x of [-1.75, 1.75]) {
-    const pole = cylinder(0.03, 0.03, 1.5, 0x555555, 6);
-    pole.position.set(x, 2.0, -0.55);
-    group.add(pole);
-  }
   for (const x of [-1.2, 1.2]) {
-    const wheel = cylinder(0.32, 0.32, 0.1, 0x222222, 10);
-    wheel.rotation.x = Math.PI / 2;
+    const wheel = buildWheel();
     wheel.position.set(x, 0.32, 0.6);
     group.add(wheel);
   }
-  return { group, bowl: bowlView, basket: basketView, interactables, toppingsAnchor, garnishesAnchor };
+
+  const lampBase = lamp.light.intensity;
+  const bubbleBase = waterPot.bubbles.map((b) => b.position.clone());
+  const update = (dt: number, time: number, fx: CartFxState) => {
+    potSteam.update(dt);
+    waterSteam.rate = fx.blanching ? 7 : 2;
+    waterSteam.update(dt);
+    bowlSteam.rate = fx.bowlSteaming ? 2.5 : 0;
+    bowlSteam.update(dt);
+    // Rolling boil: faster while blanching.
+    const speed = fx.blanching ? 9 : 4;
+    waterPot.bubbles.forEach((b, i) => {
+      const k = (time * speed * 0.25 + i * 0.37) % 1;
+      b.position.set(bubbleBase[i].x + Math.sin(time * 3 + i) * 0.01, bubbleBase[i].y + k * 0.015, bubbleBase[i].z);
+      b.scale.setScalar(0.5 + k);
+    });
+    lamp.light.intensity = lampBase * (0.97 + 0.03 * Math.sin(time * 7.3) * Math.sin(time * 3.1));
+  };
+
+  return { group, bowl: bowlView, basket: basketView, interactables, toppingsAnchor, garnishesAnchor, update };
 }

@@ -3,11 +3,10 @@ import { DaySim } from '../core';
 import type { Bowl, GameEvent, Grade, HintTarget } from '../core/types';
 import { GARNISHES, TOPPINGS } from '../core/types';
 import { PointerInput } from '../input';
-import { COUNTER_TOP, CustomerViews, createStreetScene, type StreetScene } from '../scene';
-import { GARNISH_LABEL, GRADE_LABEL, STR, TOPPING_LABEL, Ui, money, type BubbleData, type ScreenPoint, type WorldLabel } from '../ui';
+import { COUNTER_TOP, CustomerViews, SEATED_HEAD_TOP, createStreetScene, type StreetScene } from '../scene';
+import { GARNISH_ICON, GARNISH_LABEL, GRADE_LABEL, OBJECT_ICON, STR, TOPPING_ICON, TOPPING_LABEL, Ui, money, orderProgress, type BubbleData, type ScreenPoint, type WorldLabel } from '../ui';
 
 const MAX_DT = 0.1; // ARCHITECTURE §6: hidden tab must not skip the day.
-const HEAD_HEIGHT = 1.75;
 
 const newSeed = () => Math.floor(Math.random() * 0x7fffffff);
 
@@ -70,6 +69,10 @@ export class Game {
     this.clockTime += dt;
     if (!this.sim.ended) for (const e of this.sim.update(dt)) this.onEvent(e);
     this.syncScene();
+    this.street.update(dt, this.clockTime, {
+      blanching: this.sim.kitchen.blanching !== null,
+      bowlSteaming: this.street.cart.bowl.steaming,
+    });
     this.syncUi();
     this.renderer.render(this.street.scene, this.street.camera);
   }
@@ -123,11 +126,11 @@ export class Game {
 
   private onEvent(e: GameEvent): void {
     if (e.type === 'customerServed') {
-      const at = this.project(this.headPos(e.customer.table, 0.4));
+      const at = this.project(this.headPos(e.customer.table, 0.3));
       this.ui.float(at, `+${money(e.payment.total)}`);
       if (e.payment.perfect) this.ui.float({ x: at.x, y: at.y + 30 }, GRADE_LABEL.perfect, true);
     } else if (e.type === 'customerGaveUp') {
-      this.ui.float(this.project(this.headPos(e.customer.table, 0.4)), '😠', true);
+      this.ui.float(this.project(this.headPos(e.customer.table, 0.3)), '😠', true);
     } else if (e.type === 'dayEnded') {
       this.input.cancel();
       this.ui.showSummary(e.summary);
@@ -159,10 +162,11 @@ export class Game {
       if (c.state !== 'waiting' || sim.ended) continue;
       bubbles.push({
         id: c.id,
-        at: this.project(this.headPos(c.table, 0.35)),
+        at: this.project(this.headPos(c.table, 0.15)),
         order: c.order,
         patience: c.patience / c.maxPatience,
         hurried: c.kind === 'hurried',
+        progress: orderProgress(c.order, sim.kitchen.bowl),
       });
     }
     this.ui.bubbles.update(bubbles);
@@ -195,11 +199,20 @@ export class Game {
     this.ui.labels.update(this.labels());
   }
 
+  /**
+   * Counter labels: pill with icon + word, placed on or just below the front lip so they never cover the food (VIS-105).
+   * Pot and basket have no fixed label: the jars hide the pot wall on phones; the hold gauge names them while in use.
+   */
   private labels(): WorldLabel[] {
     const out: WorldLabel[] = [];
-    for (const t of TOPPINGS) out.push({ key: t, text: TOPPING_LABEL[t], at: this.objPos(`topping:${t}`, 0.1, 0, 0.12) });
-    for (const g of GARNISHES) out.push({ key: g, text: GARNISH_LABEL[g], at: this.objPos(`garnish:${g}`, 0, 0, 0.24) });
-    out.push({ key: 'trash', text: STR.trash, at: this.objPos('trash', 0.05, 0, 0.35) });
+    // The 2x2 trays are 0.6 apart but a pill is wider, so push the two columns apart to avoid overlapping labels.
+    TOPPINGS.forEach((t, i) => {
+      const dx = i % 2 === 0 ? -0.17 : 0.17;
+      out.push({ key: t, icon: TOPPING_ICON[t], text: TOPPING_LABEL[t], at: this.objPos(`topping:${t}`, 0.06, dx, 0.27) });
+    });
+    for (const g of GARNISHES) out.push({ key: g, icon: GARNISH_ICON[g], text: GARNISH_LABEL[g], at: this.objPos(`garnish:${g}`, 0, 0, 0.24) });
+    out.push({ key: 'bowl', icon: OBJECT_ICON.bowl, text: STR.bowl, at: this.objPos('bowl', 0, 0, 0.36) });
+    out.push({ key: 'trash', icon: OBJECT_ICON.trash, text: STR.trash, at: this.objPos('trash', 0.05, 0, 0.3) });
     return out;
   }
 
@@ -227,7 +240,7 @@ export class Game {
 
   private headPos(table: number, extra: number): THREE.Vector3 {
     const t = this.street.tables[table].position;
-    return this.tmp.set(t.x, t.y + HEAD_HEIGHT + extra, t.z - 0.75);
+    return this.tmp.set(t.x, t.y + SEATED_HEAD_TOP + extra, t.z - 0.75);
   }
 
   private objPos(name: string, dy = 0, dx = 0, dz = 0): ScreenPoint {
