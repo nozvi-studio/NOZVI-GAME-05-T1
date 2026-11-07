@@ -1,7 +1,7 @@
 import * as THREE from 'three';
-import { buildCart, type Cart } from './cart';
-import { box } from './primitives';
-import { buildLamp, buildShopfronts, buildTable, buildTrash } from './props';
+import { addLights, buildGround, buildStreetDecor } from './atmosphere';
+import { buildCart, FX_LAYER, type Cart, type CartFxState } from './cart';
+import { buildShopfronts, buildTable, buildTrash } from './props';
 
 export interface StreetScene {
   scene: THREE.Scene;
@@ -11,29 +11,15 @@ export interface StreetScene {
   trash: THREE.Group;
   /** Every interactable root (ARCHITECTURE §5), keyed by name. */
   interactables: Map<string, THREE.Object3D>;
+  /** Visual-only animation (steam, bulbs); never touches gameplay state. */
+  update(dt: number, time: number, fx: CartFxState): void;
 }
 
 export function createStreetScene(aspect: number): StreetScene {
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x1b1410);
-  scene.fog = new THREE.Fog(0x1b1410, 14, 30);
-
-  scene.add(new THREE.HemisphereLight(0xffd9a8, 0x2a1d14, 0.9));
-  const moon = new THREE.DirectionalLight(0xffe2bf, 0.6);
-  moon.position.set(4, 8, 6);
-  moon.castShadow = true;
-  scene.add(moon);
-
-  const road = box(30, 0.1, 10, 0x2e2e33);
-  road.position.set(0, -0.05, -8);
-  const sidewalk = box(30, 0.2, 8, 0x8c7b6a);
-  sidewalk.position.set(0, 0, 1);
-  scene.add(road, sidewalk, buildShopfronts());
-  for (let i = 0; i < 6; i++) {
-    const stripe = box(1.6, 0.02, 0.15, 0xd8d0b0);
-    stripe.position.set(-12 + i * 5, 0.01, -8);
-    scene.add(stripe);
-  }
+  addLights(scene);
+  scene.add(buildGround(), buildShopfronts());
+  const decor = buildStreetDecor(scene);
 
   const interactables = new Map<string, THREE.Object3D>();
 
@@ -57,14 +43,16 @@ export function createStreetScene(aspect: number): StreetScene {
   scene.add(trash);
   interactables.set('trash', trash);
 
-  const lamp = buildLamp();
-  lamp.position.set(-4.6, 0.1, -0.6);
-  scene.add(lamp);
-
   // Camera stands behind the cart, tilted down toward the tables (GDD §3).
   const camera = new THREE.PerspectiveCamera(46, aspect, 0.1, 100);
   camera.position.set(0, 5.3, 6.3);
   camera.lookAt(0, 0.7, 1.4);
+  camera.layers.enable(FX_LAYER);
 
-  return { scene, camera, cart, tables, trash, interactables };
+  const update = (dt: number, time: number, fx: CartFxState) => {
+    cart.update(dt, time, fx);
+    decor.update(time);
+  };
+
+  return { scene, camera, cart, tables, trash, interactables, update };
 }

@@ -27,3 +27,9 @@ Context: bot probe over 30 seeds showed 300k needs ≤ ~17 s per bowl. Choice: `
 
 ## 2026-11-06 — Owner approved MEC-002…004 and GDD §2/§7 additions
 Context: specs were drafted by the agent from the approved GDD. Choice: owner approved the specs, the topping list, the balance table and the 250k day target. Alternatives: none. Consequence: these are now the implementation baseline; further rule changes need owner approval.
+
+## 2026-11-07 — Start M2 visuals before the M1 playtest
+Context: owner asked to improve the gameplay look now; GDD §11 puts art in M2. Choice: owner approved a visuals-only pass (night atmosphere, cart and food, steam) with no rule, balance or layout changes; sound and haptics stay deferred. Alternatives: wait for the M1 playtest; import CC0 glTF assets. Consequence: still zero external assets (procedural canvas textures, primitives); bundle 141 kB gzip; the M1 playtest now runs on the nicer build.
+
+## 2026-11-07 — Night look without post-processing
+Context: bloom/post-processing is costly on mid-range phones. Choice: ACES tone mapping, a few non-shadow point lights, one shadow-casting directional light, additive halo sprites for bulbs and a CSS vignette. Steam/halo sprites live on render layer 1 so pointer raycasts (layer 0) never hit them. Alternatives: UnrealBloomPass; baked light maps. Consequence: cheap, no new dependencies; glow is faked.

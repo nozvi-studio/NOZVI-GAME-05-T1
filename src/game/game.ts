@@ -70,6 +70,10 @@ export class Game {
     this.clockTime += dt;
     if (!this.sim.ended) for (const e of this.sim.update(dt)) this.onEvent(e);
     this.syncScene();
+    this.street.update(dt, this.clockTime, {
+      blanching: this.sim.kitchen.blanching !== null,
+      bowlSteaming: this.street.cart.bowl.steaming,
+    });
     this.syncUi();
     this.renderer.render(this.street.scene, this.street.camera);
   }
