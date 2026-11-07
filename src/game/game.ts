@@ -4,7 +4,7 @@ import type { Bowl, GameEvent, Grade, HintTarget } from '../core/types';
 import { GARNISHES, TOPPINGS } from '../core/types';
 import { PointerInput } from '../input';
 import { COUNTER_TOP, CustomerViews, SEATED_HEAD_TOP, createStreetScene, type StreetScene } from '../scene';
-import { GARNISH_LABEL, GRADE_LABEL, STR, TOPPING_LABEL, Ui, money, orderProgress, type BubbleData, type ScreenPoint, type WorldLabel } from '../ui';
+import { GARNISH_ICON, GARNISH_LABEL, GRADE_LABEL, OBJECT_ICON, STR, TOPPING_ICON, TOPPING_LABEL, Ui, money, orderProgress, type BubbleData, type ScreenPoint, type WorldLabel } from '../ui';
 
 const MAX_DT = 0.1; // ARCHITECTURE §6: hidden tab must not skip the day.
 
@@ -199,11 +199,20 @@ export class Game {
     this.ui.labels.update(this.labels());
   }
 
+  /**
+   * Counter labels: pill with icon + word, placed on or just below the front lip so they never cover the food (VIS-105).
+   * Pot and basket have no fixed label: the jars hide the pot wall on phones; the hold gauge names them while in use.
+   */
   private labels(): WorldLabel[] {
     const out: WorldLabel[] = [];
-    for (const t of TOPPINGS) out.push({ key: t, text: TOPPING_LABEL[t], at: this.objPos(`topping:${t}`, 0.1, 0, 0.12) });
-    for (const g of GARNISHES) out.push({ key: g, text: GARNISH_LABEL[g], at: this.objPos(`garnish:${g}`, 0, 0, 0.24) });
-    out.push({ key: 'trash', text: STR.trash, at: this.objPos('trash', 0.05, 0, 0.35) });
+    // The 2x2 trays are 0.6 apart but a pill is wider, so push the two columns apart to avoid overlapping labels.
+    TOPPINGS.forEach((t, i) => {
+      const dx = i % 2 === 0 ? -0.17 : 0.17;
+      out.push({ key: t, icon: TOPPING_ICON[t], text: TOPPING_LABEL[t], at: this.objPos(`topping:${t}`, 0.06, dx, 0.27) });
+    });
+    for (const g of GARNISHES) out.push({ key: g, icon: GARNISH_ICON[g], text: GARNISH_LABEL[g], at: this.objPos(`garnish:${g}`, 0, 0, 0.24) });
+    out.push({ key: 'bowl', icon: OBJECT_ICON.bowl, text: STR.bowl, at: this.objPos('bowl', 0, 0, 0.36) });
+    out.push({ key: 'trash', icon: OBJECT_ICON.trash, text: STR.trash, at: this.objPos('trash', 0.05, 0, 0.3) });
     return out;
   }
 

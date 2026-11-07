@@ -3,7 +3,7 @@ id: ARCH-002
 type: architecture
 status: approved
 owner: tech-lead
-version: 0.2
+version: 0.3
 parent: GDD
 related: [ARCH-001, PLAN-001]
 studio_standard: 0.1
@@ -49,7 +49,7 @@ Numeric targets marked *(tune)* are proposals to be fixed during the phase and r
 | VIS-102 | Each order chip shows done / not done against the current bowl (U3). Done chips are dimmed with a check mark. A fully satisfied bubble gets a distinct state. Display only, no sim change | Unit test of the pure helper; screenshot with a partial bowl shows mixed chip states |
 | VIS-103 | Floor reads as background (V1): grout contrast reduced, floor mean luminance below counter mean luminance | Screenshot luminance check *(tune)*; grout no longer aligns visually with tray edges |
 | VIS-104 | Food stands out from the counter (V2, N8): darker counter value, dark tray liners, no clipped counter area | In the screenshot < 2 % of counter pixels are fully saturated white *(tune)*; every topping is distinguishable from its tray |
-| VIS-105 | Labels are readable and consistent (V4, N6): pill with icon + word, ≥ 12 px at 844×390, shared icon set with order chips, unambiguous icons for liver and pepper, labels sit outside the food they name, labels for pot, basket and bowl | Visual check at both viewports; no label covers an ingredient |
+| VIS-105 | Labels are readable and consistent (V4, N6): pill with icon + word, ≥ 12 px at 844×390, shared icon set with order chips, unambiguous icons for liver and pepper, labels sit outside the food they name, a label for the bowl. Pot and basket get no fixed label (jars hide the pot wall on phones; the hold gauge names them while in use). On viewports under 480 px high the icon is hidden to stop labels colliding; icons stay on order chips | Visual check at both viewports; no label covers an ingredient |
 | VIS-106 | Counter zones (V3): ingredients, cooking, assembly; a ring marks where the bowl rests | Zones visible at both viewports; no hit box or interactable position changes |
 | VIS-107 | Trash can scaled down visually and toned down; garnish jars show contents (N1, N2); lid colors neutral | Trash hit box screen size not smaller than before; jar contents visible |
 

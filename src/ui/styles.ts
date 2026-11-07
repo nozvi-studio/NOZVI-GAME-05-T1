@@ -36,8 +36,11 @@ const CSS = `
   box-shadow: 0 0 12px #ffd36b; animation: htg-pulse 1s ease-in-out infinite; }
 .htg-hint::after { content: "👆"; position: absolute; left: 34px; top: 30px; font-size: 30px; }
 @keyframes htg-pulse { 0%,100% { transform: scale(.8); opacity: .9; } 50% { transform: scale(1.15); opacity: .5; } }
-.htg-label { position: absolute; transform: translate(-50%, 0); background: rgba(28,18,12,.75); border-radius: 6px; padding: 0 5px;
-  font-size: clamp(9px, min(1.5vw, 3vh), 13px); font-weight: 600; white-space: nowrap; }
+.htg-label { position: absolute; transform: translate(-50%, 0); background: rgba(28,18,12,.86); border: 1.5px solid rgba(255,214,140,.55);
+  border-radius: 999px; padding: 1px 8px; color: #fff7ea; box-shadow: 0 1px 4px rgba(0,0,0,.5);
+  font-size: clamp(12px, min(1.7vw, 3.4vh), 15px); font-weight: 700; white-space: nowrap; }
+/* Short landscape phones: the row of counter labels is too tight for icons (they stay on the order chips). */
+@media (max-height: 480px) { .htg-label .ico { display: none; } .htg-label { padding: 0 6px; } }
 .htg-summary { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(10,6,4,.6);
   pointer-events: auto; }
 .htg-card { background: #fffaf0; color: #2a1a12; border-radius: 18px; padding: 18px 28px; min-width: 260px; text-align: center;

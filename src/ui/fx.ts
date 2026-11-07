@@ -35,6 +35,8 @@ export class HintRing {
 
 export interface WorldLabel {
   key: string;
+  /** Emoji shown before the word, same set as the order chips. */
+  icon?: string;
   text: string;
   at: ScreenPoint;
 }
@@ -50,7 +52,8 @@ export class WorldLabels {
       let e = this.labels.get(l.key);
       if (!e) {
         e = el('div', 'htg-label', this.root);
-        e.textContent = l.text;
+        if (l.icon) el('span', 'ico', e).textContent = `${l.icon} `;
+        el('span', '', e).textContent = l.text;
         this.labels.set(l.key, e);
       }
       e.style.left = `${l.at.x}px`;
