@@ -191,7 +191,8 @@ describe('MEC-005 orders and reactions in the day', () => {
     let spoken = 0;
     for (let seed = 1; seed <= 40; seed++) {
       const sim = new DaySim({ seed });
-      for (const e of run(sim, defaultBalance.day.lengthSeconds, 0.25)) {
+      // Step by hand so `sim.time` is the spawn time of each order, not the end of the day.
+      for (let t = 0; t < defaultBalance.day.lengthSeconds; t += 0.25) for (const e of sim.update(0.25)) {
         if (e.type !== 'customerArrived') continue;
         const { order } = e.customer;
         for (const l of [...order.toppings, ...order.garnishes]) expect([1, 2, 3]).toContain(l.portions);
