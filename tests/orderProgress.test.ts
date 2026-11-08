@@ -94,14 +94,17 @@ describe('speech', () => {
 });
 
 // MEC-007 rules 4-6.
-import { TIPS, tutorialCaption } from '../src/ui/tutorial';
+import { INTRO, TIPS, firstBowlLine, firstDayLine, tutorialCaption } from '../src/ui/tutorial';
 
 describe('tutorial captions', () => {
   const base: Order = { toppings: [{ item: 'pork', portions: 2 }], garnishes: [{ item: 'scallion', portions: 2 }], broth: 2, avoid: null, style: 'chips', implied: null, tutorial: true, clarified: false };
 
   it('walks the first customer step by step while the clock is frozen', () => {
-    expect(tutorialCaption({ frozen: true, hint: 'basket', tutorialOrder: base })).toMatch(/rổ mì/);
-    expect(tutorialCaption({ frozen: true, hint: 'toppings', tutorialOrder: base })).toMatch(/2 lần/);
+    expect(tutorialCaption({ frozen: true, hint: 'basket', tutorialOrder: base })).toBe('Mì có trong giá rồi, cầm rồi trụng đi, tới khi ông bà mách dừng thì dừng.');
+    expect(tutorialCaption({ frozen: true, hint: 'bowl', tutorialOrder: base })).toBe('Rồi bỏ vào trong tô.');
+    expect(tutorialCaption({ frozen: true, hint: 'toppings', tutorialOrder: base })).toBe('Nhìn người ta yêu cầu mà bỏ vô, lấy từng phần mỗi lần.');
+    expect(tutorialCaption({ frozen: true, hint: 'pot', tutorialOrder: base })).toBe('Chan đi.');
+    expect(tutorialCaption({ frozen: true, hint: 'garnishes', tutorialOrder: base })).toBe('Thêm tí gia vị, nhớ làm theo ý khách.');
     expect(tutorialCaption({ frozen: true, hint: 'table', tutorialOrder: base })).toMatch(/chưa tính giờ/);
   });
 
@@ -115,8 +118,21 @@ describe('tutorial captions', () => {
     expect(tutorialCaption({ frozen: false, hint: 'basket', tutorialOrder: null })).toBeNull();
   });
 
+  it('first-bowl verdict: perfect / small miss / far off', () => {
+    expect(firstBowlLine(true, 'happy')).toBe('Có tiềm năng, bán tiếp đi biết đâu xây biệt thự.');
+    expect(firstBowlLine(false, 'ok')).toBe('Để ý khách nhé, nhiều người khó tính họ bỏ về đó.');
+    expect(firstBowlLine(false, 'grumble')).toBe('Để ý khách nhé, nhiều người khó tính họ bỏ về đó.');
+    expect(firstBowlLine(false, 'scold')).toMatch(/^Có tiền năng nha/);
+  });
+
+  it('day-1 verdict: met / at least 200 / below', () => {
+    expect(firstDayLine(360, 350, 200)).toBe('Thằng này được, mới tập tành buôn bán mà giỏi dữ.');
+    expect(firstDayLine(200, 350, 200)).toBe('Ngày mai cố gắng thêm nhé, ngày đầu nhẹ nhàng thôi.');
+    expect(firstDayLine(199, 350, 200)).toBe('Chà cần cải thiện thêm nha bây, buôn bán kiểu này không đủ tiền hụi.');
+  });
+
   it('uses no emoji', () => {
     const emoji = /\p{Extended_Pictographic}/u;
-    for (const t of Object.values(TIPS)) expect(t).not.toMatch(emoji);
+    for (const t of [...Object.values(TIPS), INTRO]) expect(t).not.toMatch(emoji);
   });
 });

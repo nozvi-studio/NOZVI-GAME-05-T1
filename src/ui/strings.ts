@@ -22,6 +22,7 @@ export const STR = {
   full: 'Tối đa!',
   notTimed: 'Chưa tính giờ',
   askAgain: 'Hỏi lại',
+  start: 'Bắt đầu',
   moreTables: 'Quán đông khách: ngày mai thêm 1 bàn!',
   brothLevels: ['ít', 'vừa', 'nhiều'],
   rotateTitle: 'Xoay ngang điện thoại để chơi',

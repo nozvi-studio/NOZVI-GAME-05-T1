@@ -85,7 +85,8 @@
     "revenueTarget": 350,
     "tables": 3,
     "freezeUntilFirstServed": true,
-    "maxTables": 5
+    "maxTables": 5,
+    "firstDayFairRevenue": 200
   },
   "customers": {
     "firstSpawnSeconds": 1.0,

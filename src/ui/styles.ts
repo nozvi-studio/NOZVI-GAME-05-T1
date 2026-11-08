@@ -85,6 +85,9 @@ const CSS = `
 .htg-toast { background: rgba(28,18,12,.9); color: #fff7ea; border: 2px solid #ffd36b; border-radius: 14px; padding: 8px 16px; max-width: min(70vw, 560px);
   text-align: center; font-weight: 800; font-size: clamp(13px, min(2vw, 4vh), 20px); animation: htg-toast 4.5s ease-out forwards; }
 @keyframes htg-toast { 0% { opacity: 0; transform: scale(.9); } 8%, 82% { opacity: 1; transform: scale(1); } 100% { opacity: 0; } }
+.htg-intro { position: absolute; inset: 0; z-index: 9; display: none; align-items: center; justify-content: center; padding: 16px;
+  background: rgba(10,6,4,.55); pointer-events: auto; }
+.htg-intro .intro-text { font-size: clamp(15px, min(2.2vw, 4.4vh), 20px); font-weight: 700; line-height: 1.4; max-width: 30em; margin-bottom: 14px; }
 .htg-summary { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(10,6,4,.6);
   pointer-events: auto; }
 .htg-card { background: #fffaf0; color: #2a1a12; border-radius: 18px; padding: 18px 28px; min-width: 260px; text-align: center;

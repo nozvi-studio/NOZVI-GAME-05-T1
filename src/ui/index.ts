@@ -1,6 +1,7 @@
 import type { DaySummary } from '../core/types';
-import { HintRing, SummaryOverlay, TutorialBar, WorldLabels, floatText, sayText, toast } from './fx';
+import { HintRing, IntroCard, SummaryOverlay, TutorialBar, WorldLabels, floatText, sayText, toast } from './fx';
 import { RotatePrompt } from './rotatePrompt';
+import { STR } from './strings';
 import { injectStyles } from './styles';
 import { HoldGauge, Hud, OrderBubbles, el, type ScreenPoint } from './widgets';
 
@@ -9,7 +10,7 @@ export type { BubbleData, GaugeData, ScreenPoint } from './widgets';
 export { orderProgress } from './orderProgress';
 export { shouldAskRotate } from './rotatePrompt';
 export { brothWord, explicitOrder, leaveLine, reactionLine } from './speech';
-export { TIPS, tutorialCaption } from './tutorial';
+export { INTRO, STOP_CUE, TIPS, firstBowlLine, firstDayLine, tutorialCaption } from './tutorial';
 export type { WorldLabel } from './fx';
 
 /** DOM overlay above the canvas. Takes screen positions only; never touches Three.js. */
@@ -23,6 +24,7 @@ export class Ui {
   readonly summary: SummaryOverlay;
   readonly rotate: RotatePrompt;
   readonly tutorial: TutorialBar;
+  readonly intro: IntroCard;
   private toastLayer: HTMLDivElement;
   private fxLayer: HTMLDivElement;
 
@@ -38,6 +40,7 @@ export class Ui {
     this.toastLayer = el('div', 'htg-toasts', this.root);
     this.hud = new Hud(this.root);
     this.summary = new SummaryOverlay(this.root, onReplay);
+    this.intro = new IntroCard(this.root, STR.start);
     this.rotate = new RotatePrompt(this.root);
   }
 
@@ -53,12 +56,12 @@ export class Ui {
     sayText(this.fxLayer, at, text, tone);
   }
 
-  showSummary(s: DaySummary, day: number, extraTable = false): void {
+  showSummary(s: DaySummary, day: number, extraTable = false, verdict: string | null = null): void {
     this.gauge.hide();
     this.hint.hide();
     this.bubbles.update([]);
     this.tutorial.hide();
-    this.summary.show(s, day, extraTable);
+    this.summary.show(s, day, extraTable, verdict);
   }
 
   /** Clears transient UI for a new day. */

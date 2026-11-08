@@ -1,4 +1,4 @@
-import type { HintTarget, Order } from '../core/types';
+import type { HintTarget, Order, Reaction } from '../core/types';
 
 // MEC-007 rules 4-6: one-line tutorial captions for the first three customers, and one-time tips later.
 
@@ -11,14 +11,35 @@ export interface TutorialState {
   tutorialOrder: Order | null;
 }
 
+// Owner wording (2026-11-08), in order. Player-facing Vietnamese.
 const FIRST: Partial<Record<Exclude<HintTarget, null>, string>> = {
-  basket: 'Nhấn giữ rổ mì để trụng, thả tay khi kim vào vùng xanh.',
-  bowl: 'Kéo rổ mì thả vào tô.',
-  toppings: 'Chạm khay thịt bằm 2 lần: vừa = 2 phần.',
-  pot: 'Nhấn giữ nồi để chan nước, thả tay ở vùng xanh.',
-  garnishes: 'Chạm hũ hành 2 lần.',
+  basket: 'Mì có trong giá rồi, cầm rồi trụng đi, tới khi ông bà mách dừng thì dừng.',
+  bowl: 'Rồi bỏ vào trong tô.',
+  toppings: 'Nhìn người ta yêu cầu mà bỏ vô, lấy từng phần mỗi lần.',
+  pot: 'Chan đi.',
+  garnishes: 'Thêm tí gia vị, nhớ làm theo ý khách.',
   table: 'Kéo tô ra bàn của khách. Khách đầu chưa tính giờ!',
 };
+
+/** Opening line of the first day (MEC-007 rule 4a). */
+export const INTRO = 'Tích góp bấy lâu nay cuối cùng cũng mở được quán hủ tiếu nhỉ. Chắc gì đã biết bán, coi rồi làm theo nè.';
+
+/** What the elders call out when the blanch needle is in the green zone, for the first customer. */
+export const STOP_CUE = 'Dừng!';
+
+/** Verdict after the first bowl (MEC-007 rule 4b): perfect / small miss / far off. */
+export function firstBowlLine(perfect: boolean, reaction: Reaction): string {
+  if (perfect) return 'Có tiềm năng, bán tiếp đi biết đâu xây biệt thự.';
+  if (reaction === 'complain' || reaction === 'scold') return 'Có tiền năng nha, tiền năng về nhà bấm điện thoại tiếp chứ buôn bán gì nữa.';
+  return 'Để ý khách nhé, nhiều người khó tính họ bỏ về đó.';
+}
+
+/** Verdict at the end of day 1 (MEC-007 rule 4c): target met / at least `fair` / below. */
+export function firstDayLine(revenue: number, target: number, fair: number): string {
+  if (revenue >= target) return 'Thằng này được, mới tập tành buôn bán mà giỏi dữ.';
+  if (revenue >= fair) return 'Ngày mai cố gắng thêm nhé, ngày đầu nhẹ nhàng thôi.';
+  return 'Chà cần cải thiện thêm nha bây, buôn bán kiểu này không đủ tiền hụi.';
+}
 
 /** Caption for the tutorial bar, or null when no tutorial customer is waiting. */
 export function tutorialCaption(s: TutorialState): string | null {

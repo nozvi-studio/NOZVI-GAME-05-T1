@@ -55,6 +55,35 @@ export class TutorialBar {
   }
 }
 
+/** MEC-007 rule 4a: opening card on the first day; one tap to start. */
+export class IntroCard {
+  private e: HTMLDivElement;
+  private text: HTMLDivElement;
+
+  constructor(root: HTMLElement, startLabel: string) {
+    this.e = el('div', 'htg-intro', root);
+    const card = el('div', 'htg-card', this.e);
+    this.text = el('div', 'intro-text', card);
+    const btn = el('button', '', card);
+    btn.textContent = startLabel;
+    btn.addEventListener('click', () => this.hide());
+    this.hide();
+  }
+
+  show(text: string): void {
+    this.text.textContent = text;
+    this.e.style.display = 'flex';
+  }
+
+  hide(): void {
+    this.e.style.display = 'none';
+  }
+
+  get visible(): boolean {
+    return this.e.style.display !== 'none';
+  }
+}
+
 /** Big centred one-time tip that fades out (MEC-007 rule 6). */
 export function toast(root: HTMLElement, text: string): void {
   const e = el('div', 'htg-toast', root);
@@ -121,7 +150,8 @@ export class SummaryOverlay {
     this.hide();
   }
 
-  show(s: DaySummary, day: number, extraTable = false): void {
+  /** `verdict` replaces the default win / lose line (day-1 narrator lines, MEC-007 rule 4c). */
+  show(s: DaySummary, day: number, extraTable = false, verdictText: string | null = null): void {
     const rows: Array<[string, string]> = [
       [STR.revenue, `${money(s.revenue)} / ${money(s.target)}`],
       [STR.served, String(s.served)],
@@ -132,7 +162,7 @@ export class SummaryOverlay {
     const card = el('div', 'htg-card', this.e);
     el('h1', '', card).textContent = `${STR.dayEnded.replace('!', '')} ${day}!`;
     const verdict = el('div', `verdict ${s.won ? 'win' : 'lose'}`, card);
-    verdict.textContent = s.won ? STR.won : STR.lost;
+    verdict.textContent = verdictText ?? (s.won ? STR.won : STR.lost);
     const table = el('table', '', card);
     for (const [k, v] of rows) {
       const tr = el('tr', '', table);

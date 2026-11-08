@@ -4,7 +4,7 @@ import type { Bowl, GameEvent, Grade, HintTarget } from '../core/types';
 import { GARNISHES, TOPPINGS } from '../core/types';
 import { PointerInput } from '../input';
 import { COUNTER_TOP, CustomerViews, MAX_TABLES, SEATED_HEAD_TOP, cameraFov, createStreetScene, type StreetScene } from '../scene';
-import { GARNISH_LABEL, GRADE_LABEL, STR, TIPS, TOPPING_LABEL, Ui, brothWord, explicitOrder, leaveLine, money, orderProgress, reactionLine, tutorialCaption, type BubbleData, type ScreenPoint, type WorldLabel } from '../ui';
+import { GARNISH_LABEL, GRADE_LABEL, INTRO, STOP_CUE, STR, TIPS, TOPPING_LABEL, Ui, brothWord, explicitOrder, firstBowlLine, firstDayLine, leaveLine, money, orderProgress, reactionLine, tutorialCaption, type BubbleData, type ScreenPoint, type WorldLabel } from '../ui';
 
 const MAX_DT = 0.1; // ARCHITECTURE §6: hidden tab must not skip the day.
 /** World units per second the camera pans while a dragged object is held at a screen edge. */
@@ -49,6 +49,7 @@ export class Game {
     this.street.setTableCount(this.tables);
     this.customerViews = new CustomerViews(this.street.scene, this.street.tables, this.sim.balance.customers);
     this.ui = new Ui(container, () => this.restart(), (id) => this.sim.askAgain(id));
+    this.ui.intro.show(INTRO); // MEC-007 rule 4a: opening line of the first day
     this.input = new PointerInput(
       renderer.domElement,
       this.street.camera,
@@ -193,7 +194,10 @@ export class Game {
       if (st === 'implied') this.tip('firstImplied');
     } else if (e.type === 'customerServed') {
       const { payment: p, customer: c } = e;
-      if (c.id === 1 && this.day === 1) this.tip('clockStarts');
+      if (c.id === 1 && this.day === 1) {
+        this.ui.toast(firstBowlLine(p.perfect, p.reaction)); // MEC-007 rule 4b
+        this.tip('clockStarts');
+      }
       if (c.order.implied && (p.reaction === 'complain' || p.reaction === 'scold')) this.failedImplied.add(c.order.implied);
       if (c.order.tutorial) this.tutorialFinished();
       const at = this.project(this.headPos(c.table, 0.3));
@@ -210,7 +214,9 @@ export class Game {
       this.input.cancel();
       // MEC-009 rule 1: a won day opens one more table tomorrow, up to the maximum.
       this.nextTables = e.summary.won ? Math.min(MAX_TABLES, this.sim.balance.day.maxTables, this.tables + 1) : this.tables;
-      this.ui.showSummary(e.summary, this.day, this.nextTables > this.tables);
+      const b = this.sim.balance.day;
+      const verdict = this.day === 1 ? firstDayLine(e.summary.revenue, e.summary.target, b.firstDayFairRevenue) : null; // MEC-007 rule 4c
+      this.ui.showSummary(e.summary, this.day, this.nextTables > this.tables, verdict);
     }
   }
 
@@ -268,7 +274,8 @@ export class Game {
       const { idealSeconds: ideal, perfectToleranceSeconds: p, goodToleranceSeconds: g, maxHoldSeconds: max } = b.blanch;
       this.ui.gauge.show({
         at: this.objPos('basket', 0.4, 0.55),
-        label: STR.blanch,
+        // The elders call "Dừng!" in the green zone, for the first (untimed) customer only.
+        label: sim.frozen && Math.abs(k.blanching - ideal) <= p ? STOP_CUE : STR.blanch,
         value: k.blanching / max,
         perfect: [(ideal - p) / max, (ideal + p) / max],
         good: [(ideal - g) / max, (ideal + g) / max],
@@ -288,13 +295,14 @@ export class Game {
       });
     } else this.ui.gauge.hide();
 
-    const hint = !sim.ended && sim.summary().served === 0 ? this.hintPos(sim.nextHint()) : null;
+    // Nothing points at the counter until the opening card is dismissed.
+    const hint = !sim.ended && !this.ui.intro.visible && sim.summary().served === 0 ? this.hintPos(sim.nextHint()) : null;
     if (hint && !this.input.dragging) this.ui.hint.show(hint);
     else this.ui.hint.hide();
 
     // MEC-007 rules 4-5: captions for the three tutorial customers; anchored to the ring for the first.
     const tutorialOrder = sim.customers.find((c) => c.state === 'waiting' && c.order.tutorial)?.order ?? null;
-    const caption = sim.ended ? null : tutorialCaption({ frozen: sim.frozen, hint: sim.nextHint(), tutorialOrder });
+    const caption = sim.ended || this.ui.intro.visible ? null : tutorialCaption({ frozen: sim.frozen, hint: sim.nextHint(), tutorialOrder });
     if (caption) this.ui.tutorial.show(caption, sim.frozen && hint ? hint : null);
     else this.ui.tutorial.hide();
 
@@ -326,9 +334,18 @@ export class Game {
       case 'pot':
         return this.objPos(target, 0.2);
       case 'toppings':
-        return this.project(cart.toppingsAnchor.getWorldPosition(this.tmp));
-      case 'garnishes':
-        return this.project(cart.garnishesAnchor.getWorldPosition(this.tmp));
+      case 'garnishes': {
+        // Point at the exact ingredient still missing, not the middle of the group (it used to land on tiêu).
+        const order = this.sim.customers.find((c) => c.state === 'waiting')?.order;
+        const bowl = this.sim.kitchen.bowl;
+        const line =
+          target === 'toppings'
+            ? order?.toppings.find((l) => bowl.toppings[l.item] < l.portions)
+            : order?.garnishes.find((l) => bowl.garnishes[l.item] < l.portions);
+        const kind = target === 'toppings' ? 'topping' : 'garnish';
+        if (line) return this.objPos(`${kind}:${line.item}`, 0.15);
+        return this.project((target === 'toppings' ? cart.toppingsAnchor : cart.garnishesAnchor).getWorldPosition(this.tmp));
+      }
       case 'table': {
         const c = this.sim.customers.find((x) => x.state === 'waiting');
         return c ? this.project(this.street.tables[c.table].getWorldPosition(this.tmp).setY(0.8)) : null;

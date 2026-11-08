@@ -3,7 +3,7 @@ id: MEC-007
 type: mechanic
 status: approved
 owner: game-design
-version: 0.2
+version: 0.3
 parent: GDD
 related: [MEC-003, MEC-006]
 studio_standard: 0.1
@@ -20,7 +20,10 @@ A longer day gives the ramp (spoken, then implied orders, mid-day pace) room to 
 1. A day lasts `day.lengthSeconds` = 300 s. Absolute time marks scale by 5/3: hurried customers from 100 s, topping brackets at 0 / 100 / 200 s, spoken orders from 50 s. Ramps defined as a share of the day (spawn interval, spoken and implied shares) are unchanged.
 2. While the first customer is arriving or waiting (`day.freezeUntilFirstServed`), the day clock, spawning and that customer's patience stand still. Cooking holds (blanch, pour) still run. The HUD timer reads "Chưa tính giờ". The clock starts when the first customer is served (or scolds and leaves).
 3. The first three customers stay tutorial customers (MEC-006 rules 1, 5, 6).
-4. For the first customer, a one-line caption sits next to the hint ring and names the next step: hold the basket, drag to the bowl, tap thịt bằm twice, hold the pot to the green zone, tap hành twice, drag to the table. *(agent)*
+4. For the first customer, a one-line caption sits next to the hint ring and names the next step (owner wording 2026-11-08, `src/ui/tutorial.ts`). The hint ring points at the exact ingredient still missing (it used to point at the middle of the jar row, i.e. tiêu). During the first blanch the gauge label reads "Dừng!" while the needle is in the green zone ("ông bà mách").
+   - 4a. Day 1 opens with a card: "Tích góp bấy lâu nay cuối cùng cũng mở được quán hủ tiếu nhỉ. Chắc gì đã biết bán, coi rồi làm theo nè." and a "Bắt đầu" button; captions and the ring wait until it is dismissed.
+   - 4b. After the first bowl: perfect → "Có tiềm năng, bán tiếp đi biết đâu xây biệt thự."; small miss (ok / grumble) → "Để ý khách nhé, nhiều người khó tính họ bỏ về đó."; far off (complain / scold) → "Có tiền năng nha, tiền năng về nhà bấm điện thoại tiếp chứ buôn bán gì nữa."
+   - 4c. End of day 1: target met → "Thằng này được, mới tập tành buôn bán mà giỏi dữ."; at least `day.firstDayFairRevenue` (200 k) → "Ngày mai cố gắng thêm nhé, ngày đầu nhẹ nhàng thôi."; below → "Chà cần cải thiện thêm nha bây, buôn bán kiểu này không đủ tiền hụi."
 5. For customers 2–3, a caption at the top centre explains what is new in their order, in this priority: avoid / allergy request, broth level other than vừa, amounts ít / nhiều, otherwise "chip turns green when exact". *(agent)*
 6. One-time toasts per day: clock starts (first serve), tutorial over (third tutorial customer served or gone), first spoken order, first implied order ("Tô thường = thịt bằm vừa, hành vừa, vừa nước"). *(agent)*
 7. `day.revenueTarget` = 350 k so the difficulty stays as approved for MEC-006 (bot probe below). Confirmed by the owner 2026-11-08.
