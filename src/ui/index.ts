@@ -53,12 +53,12 @@ export class Ui {
     sayText(this.fxLayer, at, text, tone);
   }
 
-  showSummary(s: DaySummary): void {
+  showSummary(s: DaySummary, day: number): void {
     this.gauge.hide();
     this.hint.hide();
     this.bubbles.update([]);
     this.tutorial.hide();
-    this.summary.show(s);
+    this.summary.show(s, day);
   }
 
   /** Clears transient UI for a new day. */

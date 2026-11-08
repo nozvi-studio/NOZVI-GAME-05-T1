@@ -121,7 +121,7 @@ export class SummaryOverlay {
     this.hide();
   }
 
-  show(s: DaySummary): void {
+  show(s: DaySummary, day: number): void {
     const rows: Array<[string, string]> = [
       [STR.revenue, `${money(s.revenue)} / ${money(s.target)}`],
       [STR.served, String(s.served)],
@@ -130,7 +130,7 @@ export class SummaryOverlay {
     ];
     this.e.innerHTML = '';
     const card = el('div', 'htg-card', this.e);
-    el('h1', '', card).textContent = STR.dayEnded;
+    el('h1', '', card).textContent = `${STR.dayEnded.replace('!', '')} ${day}!`;
     const verdict = el('div', `verdict ${s.won ? 'win' : 'lose'}`, card);
     verdict.textContent = s.won ? STR.won : STR.lost;
     const table = el('table', '', card);

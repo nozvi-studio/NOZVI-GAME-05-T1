@@ -31,11 +31,11 @@ export class Hud {
   }
 
   /** `frozen`: the first customer is not timed (MEC-007 rule 2). */
-  set(revenue: number, target: number, timeLeft: number, frozen = false): void {
-    const key = `${revenue}|${target}|${Math.ceil(timeLeft)}|${frozen}`;
+  set(revenue: number, target: number, timeLeft: number, frozen = false, day = 1): void {
+    const key = `${revenue}|${target}|${Math.ceil(timeLeft)}|${frozen}|${day}`;
     if (key === this.last) return;
     this.last = key;
-    this.money.innerHTML = `${STR.revenue}: <b>${money(revenue)}</b> / ${STR.target}: ${money(target)}`;
+    this.money.innerHTML = `${STR.day} ${day} · ${STR.revenue}: <b>${money(revenue)}</b> / ${STR.target}: ${money(target)}`;
     this.timer.textContent = frozen ? STR.notTimed : `${STR.timeLeft} ${clock(timeLeft)}`;
     this.timer.classList.toggle('low', !frozen && timeLeft <= 30);
   }

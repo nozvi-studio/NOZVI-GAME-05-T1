@@ -267,3 +267,37 @@ describe('MEC-007 day length and first-customer freeze', () => {
     expect(sim.time).toBeCloseTo(t0 + 10, 5);
   });
 });
+
+describe('MEC-007 later days', () => {
+  it('day 2+: no tutorial, no freeze, a short chip warm-up, then spoken orders', () => {
+    const w = defaultBalance.orders.laterDays.warmupCustomers;
+    let spokenAfter = 0;
+    let after = 0;
+    for (let seed = 1; seed <= 30; seed++) {
+      const sim = new DaySim({ seed, day: 2 });
+      expect(sim.dayNumber).toBe(2);
+      let index = 0;
+      for (let t = 0; t < defaultBalance.day.lengthSeconds; t += 0.25) {
+        for (const e of sim.update(0.25)) {
+          if (e.type !== 'customerArrived') continue;
+          expect(e.customer.order.tutorial).toBe(false);
+          if (index < w) expect(e.customer.order.style).toBe('chips');
+          else {
+            after += 1;
+            if (e.customer.order.style !== 'chips') spokenAfter += 1;
+          }
+          index += 1;
+        }
+        expect(sim.frozen).toBe(false);
+      }
+    }
+    expect(spokenAfter / after).toBeCloseTo(defaultBalance.orders.laterDays.spokenChance, 5);
+  });
+
+  it('day 1 keeps the tutorial', () => {
+    const sim = new DaySim({ seed: 1 });
+    run(sim, cfg.firstSpawnSeconds + cfg.arriveSeconds + 0.3);
+    expect(sim.customers[0].order.tutorial).toBe(true);
+    expect(sim.frozen).toBe(true);
+  });
+});

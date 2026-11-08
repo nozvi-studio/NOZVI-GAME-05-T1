@@ -3,6 +3,7 @@ import type { Garnish, Grade, Topping } from '../core/types';
 // Player-facing strings (Vietnamese, GDD §10). Code identifiers stay English.
 export const STR = {
   revenue: 'Doanh thu',
+  day: 'Ngày',
   target: 'Mục tiêu',
   timeLeft: 'Còn',
   dayEnded: 'Hết ngày!',

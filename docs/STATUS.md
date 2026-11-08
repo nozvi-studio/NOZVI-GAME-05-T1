@@ -24,7 +24,7 @@ Deferred by owner: env map (VIS-206), sound and haptics (VIS-408). Details and a
 Playtest build (private, owner shares it): https://claude.ai/artifact/FD2D6yUBwNEWZixyqQERPo (version 4 = Phase 1 + 2, commit `0bff32d`), built with `npx vite build --base=./`. Republish after each phase.
 
 ## Owner review needed
-0a. **MEC-006 + MEC-007** on the work branch and live: 5-minute day, untimed tutorial first customer with captions, revenue target **350 k (agent proposal from the bot probe, please confirm)**.
+0a. **MEC-006 + MEC-007** live on the work branch (350 k target confirmed); later days skip the tutorial and go spoken after 2 chip customers. **MEC-008 hint proposal (Draft) needs owner answers to §12.**
 0. **Phone layout** (new): on a real phone, check the rotate popup (portrait) and the closer framing (landscape). Known limits: browsers cannot force landscape, so players must rotate; with the phone's auto-rotate lock on, the popup stays and the day stays paused.
 1. **Phase 2** on the playtest link: does the empty bowl read as a bowl? Are garnish and toppings readable inside the bowl on a phone? Say "ok" or point at what is wrong; Phase 3 waits for this.
 2. **Real phone check** (not possible here): do the emoji 🫀 (liver) and 🧂 (pepper) render, and is the label row readable at 844×390?

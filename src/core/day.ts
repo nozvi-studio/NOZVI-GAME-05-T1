@@ -27,6 +27,8 @@ import {
 export interface DaySimOptions {
   seed?: number;
   balance?: Balance;
+  /** 1 for the first day of a session; later days skip the tutorial (MEC-007 rules 8-9). */
+  day?: number;
 }
 
 const TEMPERS: readonly Temper[] = ['easy', 'normal', 'picky'];
@@ -52,8 +54,12 @@ export class DaySim {
   private stats = { served: 0, perfect: 0, lost: 0 };
   private isEnded = false;
 
+  /** Day number in this session (1 = first day, with the tutorial). */
+  readonly dayNumber: number;
+
   constructor(opts: DaySimOptions = {}) {
     this.balance = opts.balance ?? defaultBalance;
+    this.dayNumber = Math.max(1, opts.day ?? 1);
     this.rng = new Rng(opts.seed ?? Date.now());
     this.kitchenState = new KitchenState(this.balance);
     this.spawnTimer = this.balance.customers.firstSpawnSeconds;
@@ -80,7 +86,7 @@ export class DaySim {
    * customer's patience stand still (cooking holds still run), so the tutorial bowl costs no time.
    */
   get frozen(): boolean {
-    if (!this.balance.day.freezeUntilFirstServed) return false;
+    if (!this.balance.day.freezeUntilFirstServed || this.dayNumber > 1) return false;
     const first = this.list.find((c) => c.id === 1);
     return first !== undefined && (first.state === 'arriving' || first.state === 'waiting');
   }
@@ -238,9 +244,9 @@ export class DaySim {
     const first = this.spawned === 0;
     const kind: CustomerKind =
       !first && this.clock >= cfg.hurriedFromSeconds && this.rng.next() < cfg.hurriedChance ? 'hurried' : 'regular';
-    // MEC-006: the first customer is always easy-going; others draw a hidden temperament.
+    // MEC-006: the tutorial's first customer is always easy-going; others draw a hidden temperament.
     const tw = this.balance.temper.weights;
-    const temper: Temper = first ? 'easy' : TEMPERS[this.weighted([tw.easy, tw.normal, tw.picky])];
+    const temper: Temper = first && this.dayNumber === 1 ? 'easy' : TEMPERS[this.weighted([tw.easy, tw.normal, tw.picky])];
     const patience = cfg.patienceSeconds[kind];
     const customer: Customer = {
       id: this.nextId++,
@@ -262,12 +268,20 @@ export class DaySim {
   // MEC-006 rules 1-4 (replaces MEC-003 rule 5 and MEC-005 rules 3-5).
   private makeOrder(index: number): Order {
     const o = this.balance.orders;
-    const tutorial = index < o.tutorialCustomers;
-    if (index === 0) return { ...fromRecipe(REGULAR_BOWL), avoid: null, style: 'chips', implied: null, tutorial };
+    const later = this.dayNumber > 1;
+    const tutorial = !later && index < o.tutorialCustomers;
+    if (!later && index === 0) return { ...fromRecipe(REGULAR_BOWL), avoid: null, style: 'chips', implied: null, tutorial };
 
-    const after = this.balance.day.lengthSeconds - o.spokenFromSeconds;
-    const p = Math.min(1, Math.max(0, (this.clock - o.spokenFromSeconds) / after));
-    const spoken = !tutorial && this.clock >= o.spokenFromSeconds && this.rng.next() < o.spokenChanceStart + (o.spokenChanceEnd - o.spokenChanceStart) * p;
+    let spoken: boolean;
+    let p: number;
+    if (later) {
+      // MEC-007 rule 9: a short chip warm-up, then (almost) everyone speaks; the implied share still ramps over the day.
+      p = Math.min(1, this.clock / this.balance.day.lengthSeconds);
+      spoken = index >= o.laterDays.warmupCustomers && this.rng.next() < o.laterDays.spokenChance;
+    } else {
+      p = Math.min(1, Math.max(0, (this.clock - o.spokenFromSeconds) / (this.balance.day.lengthSeconds - o.spokenFromSeconds)));
+      spoken = !tutorial && this.clock >= o.spokenFromSeconds && this.rng.next() < o.spokenChanceStart + (o.spokenChanceEnd - o.spokenChanceStart) * p;
+    }
     const implied = spoken && this.rng.next() < o.impliedShareStart + (o.impliedShareEnd - o.impliedShareStart) * p;
 
     let base: Pick<Order, 'toppings' | 'garnishes' | 'broth'>;

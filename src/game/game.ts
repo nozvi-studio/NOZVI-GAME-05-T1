@@ -22,9 +22,11 @@ export class Game {
   private height = 1;
   private prevBasket: Grade | null = null;
   private prevBroth = false;
-  /** MEC-007 rule 6: one-time tips already shown this day, and tutorial customers finished. */
+  /** MEC-007 rule 6: one-time tips already shown this session (not repeated on later days), and tutorial customers finished. */
   private tips = new Set<keyof typeof TIPS>();
   private tutorialDoneCount = 0;
+  /** Day number in this session; day 2+ skips the tutorial (MEC-007 rule 8). */
+  private day = 1;
   private tmp = new THREE.Vector3();
 
   constructor(
@@ -62,12 +64,12 @@ export class Game {
   /** Starts a new day with a fresh DaySim, no reload (GDD §4). */
   restart(): void {
     this.input.cancel();
-    this.sim = new DaySim({ seed: newSeed() });
+    this.day += 1;
+    this.sim = new DaySim({ seed: newSeed(), day: this.day });
     this.customerViews.clear();
     this.ui.reset();
     this.prevBasket = null;
     this.prevBroth = false;
-    this.tips.clear();
     this.tutorialDoneCount = 0;
   }
 
@@ -155,7 +157,7 @@ export class Game {
       this.ui.say(this.project(this.headPos(e.customer.table, 0.45)), leaveLine(e.customer.temper, e.customer.id), 'leave');
     } else if (e.type === 'dayEnded') {
       this.input.cancel();
-      this.ui.showSummary(e.summary);
+      this.ui.showSummary(e.summary, this.day);
     }
   }
 
@@ -190,7 +192,7 @@ export class Game {
   private syncUi(): void {
     const sim = this.sim;
     const b = sim.balance;
-    this.ui.hud.set(sim.revenue, b.day.revenueTarget, b.day.lengthSeconds - sim.time, sim.frozen);
+    this.ui.hud.set(sim.revenue, b.day.revenueTarget, b.day.lengthSeconds - sim.time, sim.frozen, this.day);
 
     const bubbles: BubbleData[] = [];
     for (const c of sim.customers) {

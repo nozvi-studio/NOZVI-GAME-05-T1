@@ -41,7 +41,11 @@
     "spokenChanceStart": 0.3,
     "spokenChanceEnd": 0.8,
     "impliedShareStart": 0.1,
-    "impliedShareEnd": 0.6
+    "impliedShareEnd": 0.6,
+    "laterDays": {
+      "warmupCustomers": 2,
+      "spokenChance": 1.0
+    }
   },
   "deviation": {
     "noodleWeight": 1.5,
