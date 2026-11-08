@@ -37,6 +37,11 @@ export class Game {
   private panLimit = 0;
   /** MEC-008 rule 3: implied phrases served badly this session get a free translation next time. */
   private failedImplied = new Set<string>();
+  /** MEC-007 rule 4b: verdict on the first bowl, shown with "Để tôi thử" once the first customer has left. */
+  private firstVerdict: string | null = null;
+  private verdictShown = false;
+  /** Right-panel captions already shown this session (each once). */
+  private shownCaptions = new Set<string>();
   private tmp = new THREE.Vector3();
 
   constructor(
@@ -195,8 +200,7 @@ export class Game {
     } else if (e.type === 'customerServed') {
       const { payment: p, customer: c } = e;
       if (c.id === 1 && this.day === 1) {
-        this.ui.toast(firstBowlLine(p.perfect, p.reaction)); // MEC-007 rule 4b
-        this.tip('clockStarts');
+        this.firstVerdict = firstBowlLine(p.perfect, p.reaction); // MEC-007 rule 4b, shown once they have left
       }
       if (c.order.implied && (p.reaction === 'complain' || p.reaction === 'scold')) this.failedImplied.add(c.order.implied);
       if (c.order.tutorial) this.tutorialFinished();
@@ -224,7 +228,7 @@ export class Game {
   private tip(key: keyof typeof TIPS): void {
     if (this.tips.has(key)) return;
     this.tips.add(key);
-    this.ui.toast(TIPS[key]);
+    this.ui.side.push(TIPS[key]);
   }
 
   private tutorialFinished(): void {
@@ -265,6 +269,7 @@ export class Game {
         progress: orderProgress(c.order, sim.kitchen.bowl, sim.balance.broth),
         // MEC-008 rule 3: free translation for an implied phrase served badly earlier this session.
         hint: c.order.implied && !c.order.clarified && this.failedImplied.has(c.order.implied) ? explicitOrder(c.order, c.id) : null,
+        canAsk: sim.canAskAgain(c),
       });
     }
     this.ui.bubbles.update(bubbles);
@@ -296,15 +301,35 @@ export class Game {
     } else this.ui.gauge.hide();
 
     // Nothing points at the counter until the opening card is dismissed.
-    const hint = !sim.ended && !this.ui.intro.visible && sim.summary().served === 0 ? this.hintPos(sim.nextHint()) : null;
+    // MEC-007 rule 4b: after the first customer has eaten and left, the verdict card starts the real day.
+    if (this.firstVerdict && !this.verdictShown && sim.frozen && !sim.firstCustomerPresent && !this.ui.intro.visible) {
+      this.verdictShown = true;
+      this.ui.intro.show(this.firstVerdict, STR.tryIt, () => {
+        this.sim.releaseTutorial();
+        this.tip('clockStarts');
+      });
+    }
+    const firstWaiting = sim.frozen && sim.customers.some((c) => c.id === 1 && (c.state === 'arriving' || c.state === 'waiting'));
+    const ringOn = !sim.ended && !this.ui.intro.visible && (sim.frozen ? firstWaiting : sim.summary().served === 0);
+    const hint = ringOn ? this.hintPos(sim.nextHint()) : null;
     if (hint && !this.input.dragging) this.ui.hint.show(hint);
     else this.ui.hint.hide();
 
     // MEC-007 rules 4-5: captions for the three tutorial customers; anchored to the ring for the first.
     const tutorialOrder = sim.customers.find((c) => c.state === 'waiting' && c.order.tutorial)?.order ?? null;
-    const caption = sim.ended || this.ui.intro.visible ? null : tutorialCaption({ frozen: sim.frozen, hint: sim.nextHint(), tutorialOrder });
-    if (caption) this.ui.tutorial.show(caption, sim.frozen && hint ? hint : null);
-    else this.ui.tutorial.hide();
+    // First customer: caption next to the ring. Afterwards (MEC-007 rule 5): each caption once, in the right panel.
+    if (firstWaiting && !this.ui.intro.visible && !sim.ended) {
+      const caption = tutorialCaption({ frozen: true, hint: sim.nextHint(), tutorialOrder });
+      if (caption) this.ui.tutorial.show(caption, hint);
+      else this.ui.tutorial.hide();
+    } else {
+      this.ui.tutorial.hide();
+      const caption = sim.frozen || sim.ended ? null : tutorialCaption({ frozen: false, hint: sim.nextHint(), tutorialOrder });
+      if (caption && !this.shownCaptions.has(caption)) {
+        this.shownCaptions.add(caption);
+        this.ui.side.push(caption);
+      }
+    }
 
     this.ui.labels.update(this.labels());
   }

@@ -111,7 +111,7 @@ describe('tutorial captions', () => {
   it('explains what is new in the 2nd and 3rd tutorial orders', () => {
     expect(tutorialCaption({ frozen: false, hint: 'basket', tutorialOrder: { ...base, avoid: { item: 'shrimp', kind: 'allergy' } } })).toMatch(/dị ứng/);
     expect(tutorialCaption({ frozen: false, hint: 'basket', tutorialOrder: { ...base, broth: 3 } })).toMatch(/Nhiều nước/);
-    expect(tutorialCaption({ frozen: false, hint: 'basket', tutorialOrder: { ...base, toppings: [{ item: 'pork', portions: 1 }] } })).toMatch(/Ít = chạm 1 lần/);
+    expect(tutorialCaption({ frozen: false, hint: 'basket', tutorialOrder: { ...base, toppings: [{ item: 'pork', portions: 1 }] } })).toBe('Lấy từng phần nhé, khách ăn ít thì lấy một phần thôi. Khách ăn nhiều thì lấy ba phần là đủ rồi.');
   });
 
   it('stays silent once no tutorial customer waits', () => {

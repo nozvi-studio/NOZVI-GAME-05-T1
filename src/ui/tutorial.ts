@@ -48,7 +48,7 @@ export function tutorialCaption(s: TutorialState): string | null {
   if (!o) return null;
   if (o.avoid) return o.avoid.kind === 'allergy' ? 'Khách dị ứng một món: tuyệt đối đừng bỏ món đó vào!' : 'Khách dặn "Không ...": đừng bỏ món đó vào tô.';
   if (o.broth !== 2) return 'Ít nước / Nhiều nước: thả tay khi kim vào vùng xanh của mức đó.';
-  if ([...o.toppings, ...o.garnishes].some((l) => l.portions !== 2)) return 'Ít = chạm 1 lần, vừa = 2 lần, nhiều = 3 lần. Số đếm cho biết đã đủ chưa.';
+  if ([...o.toppings, ...o.garnishes].some((l) => l.portions !== 2)) return 'Lấy từng phần nhé, khách ăn ít thì lấy một phần thôi. Khách ăn nhiều thì lấy ba phần là đủ rồi.';
   return 'Nấu theo đơn: chip chuyển xanh là đủ phần.';
 }
 

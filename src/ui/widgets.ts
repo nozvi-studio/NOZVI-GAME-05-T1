@@ -1,10 +1,9 @@
 import type { Order } from '../core/types';
+import { hudBottom } from './layout';
 import type { LineProgress, OrderProgress } from './orderProgress';
 import { avoidChip, brothWord, explicitOrder, lineText, spokenOrder } from './speech';
 import { STR, clock, money } from './strings';
 
-/** Approximate bottom edge of the HUD bar, in CSS px. */
-const HUD_BOTTOM_PX = 58;
 
 export interface ScreenPoint {
   x: number;
@@ -52,6 +51,8 @@ export interface BubbleData {
   progress: OrderProgress;
   /** MEC-008 rule 3: free translation shown under an implied phrase, or null. */
   hint: string | null;
+  /** MEC-008 rule 2a: "Hỏi lại" is unlocked (a quarter of the patience has passed). */
+  canAsk: boolean;
 }
 
 interface Chip {
@@ -84,16 +85,21 @@ export class OrderBubbles {
   constructor(
     private root: HTMLElement,
     private onAsk: (customerId: number) => void,
+    /** Screen area bubbles must keep clear of (the right-side guidance panel). */
+    private avoid: () => DOMRect | null = () => null,
   ) {}
 
   update(list: BubbleData[]): void {
     const seen = new Set<number>();
     // Bubbles that would overlap (edge-pinned or near-edge ones) stack downward instead (MEC-009 rule 6).
     const placed: Array<{ l: number; r: number; t: number; b: number }> = [];
+    const top = hudBottom() + 6;
+    const keepOut = this.avoid();
+    if (keepOut) placed.push({ l: keepOut.left - 4, r: keepOut.right + 4, t: keepOut.top - 4, b: keepOut.bottom + 4 });
     for (const b of list) {
       seen.add(b.id);
       let bubble = this.bubbles.get(b.id);
-      const key = `${b.order.clarified}|${b.hint ?? ''}`;
+      const key = `${b.order.clarified}|${b.hint ?? ''}|${b.canAsk}`;
       if (bubble && bubble.key !== key) {
         bubble.root.remove();
         bubble = undefined;
@@ -104,18 +110,17 @@ export class OrderBubbles {
       }
       // Keep bubbles on screen and below the HUD bar (short landscape phones).
       const halfW = bubble.root.offsetWidth / 2 + 6;
-      const x = Math.min(window.innerWidth - halfW, Math.max(halfW, b.at.x));
+      let x = Math.min(window.innerWidth - halfW, Math.max(halfW, b.at.x));
       const w = bubble.root.offsetWidth;
       const h = bubble.root.offsetHeight;
-      let y = Math.max(HUD_BOTTOM_PX + h, b.at.y);
-      for (let moved = true; moved; ) {
-        moved = false;
-        for (const p of placed) {
-          if (x - w / 2 < p.r && x + w / 2 > p.l && y - h < p.b && y > p.t) {
-            y = p.b + 6 + h;
-            moved = true;
-          }
-        }
+      let y = Math.max(top + h, b.at.y);
+      // Overlap: take the nearest sideways position that is free of every placed box; if none, stack below.
+      const hits = (cx: number, cy: number) => placed.filter((p) => cx - w / 2 < p.r && cx + w / 2 > p.l && cy - h < p.b && cy > p.t);
+      for (let tries = 0; tries < 8 && hits(x, y).length > 0; tries++) {
+        const fits = (cx: number) => cx - w / 2 >= 4 && cx + w / 2 <= window.innerWidth - 4 && hits(cx, y).length === 0;
+        const candidates = placed.flatMap((p) => [p.r + 4 + w / 2, p.l - 4 - w / 2]).filter(fits);
+        if (candidates.length > 0) x = candidates.reduce((a, c) => (Math.abs(c - x) < Math.abs(a - x) ? c : a));
+        else y = Math.max(...hits(x, y).map((p) => p.b)) + 6 + h;
       }
       placed.push({ l: x - w / 2, r: x + w / 2, t: y - h, b: y });
       bubble.root.style.left = `${x}px`;
@@ -153,7 +158,7 @@ export class OrderBubbles {
       const text = o.clarified ? explicitOrder(o, b.id) : spokenOrder(o, b.id);
       el('div', 'say', root).textContent = `“${text}”`;
       if (b.hint) el('div', 'hint', root).textContent = b.hint;
-      if (!o.clarified && !o.tutorial) {
+      if (b.canAsk) {
         const ask = el('button', 'htg-ask', root);
         ask.textContent = STR.askAgain;
         ask.addEventListener('pointerdown', (ev) => {

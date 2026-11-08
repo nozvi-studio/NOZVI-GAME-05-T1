@@ -3,7 +3,7 @@ id: MEC-007
 type: mechanic
 status: approved
 owner: game-design
-version: 0.3
+version: 0.4
 parent: GDD
 related: [MEC-003, MEC-006]
 studio_standard: 0.1
@@ -18,14 +18,14 @@ A longer day gives the ramp (spoken, then implied orders, mid-day pace) room to 
 
 ## 5. Rules
 1. A day lasts `day.lengthSeconds` = 300 s. Absolute time marks scale by 5/3: hurried customers from 100 s, topping brackets at 0 / 100 / 200 s, spoken orders from 50 s. Ramps defined as a share of the day (spawn interval, spoken and implied shares) are unchanged.
-2. While the first customer is arriving or waiting (`day.freezeUntilFirstServed`), the day clock, spawning and that customer's patience stand still. Cooking holds (blanch, pour) still run. The HUD timer reads "Chưa tính giờ". The clock starts when the first customer is served (or scolds and leaves).
+2. From the first spawn until the player presses "Để tôi thử" (`day.freezeUntilFirstServed`, `DaySim.releaseTutorial`), the day clock, spawning and patience stand still. Cooking holds (blanch, pour) and the customer's eating and leaving still run. The HUD timer reads "Chưa tính giờ".
 3. The first three customers stay tutorial customers (MEC-006 rules 1, 5, 6).
 4. For the first customer, a one-line caption sits next to the hint ring and names the next step (owner wording 2026-11-08, `src/ui/tutorial.ts`). The hint ring points at the exact ingredient still missing (it used to point at the middle of the jar row, i.e. tiêu). During the first blanch the gauge label reads "Dừng!" while the needle is in the green zone ("ông bà mách").
    - 4a. Day 1 opens with a card: "Tích góp bấy lâu nay cuối cùng cũng mở được quán hủ tiếu nhỉ. Chắc gì đã biết bán, coi rồi làm theo nè." and a "Bắt đầu" button; captions and the ring wait until it is dismissed.
-   - 4b. After the first bowl: perfect → "Có tiềm năng, bán tiếp đi biết đâu xây biệt thự."; small miss (ok / grumble) → "Để ý khách nhé, nhiều người khó tính họ bỏ về đó."; far off (complain / scold) → "Có tiền năng nha, tiền năng về nhà bấm điện thoại tiếp chứ buôn bán gì nữa."
+   - 4b. When the first customer has eaten and left, a card shows the verdict on the first bowl with a "Để tôi thử" button that starts the real day (owner 2026-11-08). Verdicts: perfect → "Có tiềm năng, bán tiếp đi biết đâu xây biệt thự."; small miss (ok / grumble) → "Để ý khách nhé, nhiều người khó tính họ bỏ về đó."; far off (complain / scold) → "Có tiền năng nha, tiền năng về nhà bấm điện thoại tiếp chứ buôn bán gì nữa."
    - 4c. End of day 1: target met → "Thằng này được, mới tập tành buôn bán mà giỏi dữ."; at least `day.firstDayFairRevenue` (200 k) → "Ngày mai cố gắng thêm nhé, ngày đầu nhẹ nhàng thôi."; below → "Chà cần cải thiện thêm nha bây, buôn bán kiểu này không đủ tiền hụi."
-5. For customers 2–3, a caption at the top centre explains what is new in their order, in this priority: avoid / allergy request, broth level other than vừa, amounts ít / nhiều, otherwise "chip turns green when exact". *(agent)*
-6. One-time toasts per day: clock starts (first serve), tutorial over (third tutorial customer served or gone), first spoken order, first implied order ("Tô thường = thịt bằm vừa, hành vừa, vừa nước"). *(agent)*
+5. After the first customer, all guidance (captions for customers 2–3 and one-time tips) goes to a panel on the right side of the screen, one message at a time, for 10 s or until X is tapped; each caption is shown once per session; order bubbles keep clear of the panel (owner 2026-11-08). Captions explain what is new in a tutorial order, in this priority: avoid / allergy request, broth level other than vừa, amounts ít / nhiều ("Lấy từng phần nhé, khách ăn ít thì lấy một phần thôi. Khách ăn nhiều thì lấy ba phần là đủ rồi.", owner wording), otherwise "chip turns green when exact".
+6. One-time tips per session, in the right panel: clock starts (first serve), tutorial over (third tutorial customer served or gone), first spoken order, first implied order ("Tô thường = thịt bằm vừa, hành vừa, vừa nước"). *(agent)*
 7. `day.revenueTarget` = 350 k so the difficulty stays as approved for MEC-006 (bot probe below). Confirmed by the owner 2026-11-08.
 
 **Later days (owner request 2026-11-08: "từ ngày 2 để bắt lại nhịp")**

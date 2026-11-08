@@ -55,6 +55,7 @@ export class DaySim {
   private spawned = 0;
   private stats = { served: 0, perfect: 0, lost: 0 };
   private isEnded = false;
+  private tutorialReleased = false;
 
   /** Day number in this session (1 = first day, with the tutorial). */
   readonly dayNumber: number;
@@ -87,13 +88,22 @@ export class DaySim {
   }
 
   /**
-   * MEC-007 rule 2: while the first customer is arriving or waiting, the day clock, spawning and that
-   * customer's patience stand still (cooking holds still run), so the tutorial bowl costs no time.
+   * MEC-007 rule 2: from the first spawn until `releaseTutorial()` (the player presses "Để tôi thử" after the
+   * first customer leaves), the day clock, spawning and patience stand still; cooking holds still run.
    */
   get frozen(): boolean {
-    if (!this.balance.day.freezeUntilFirstServed || this.dayNumber > 1) return false;
-    const first = this.list.find((c) => c.id === 1);
-    return first !== undefined && (first.state === 'arriving' || first.state === 'waiting');
+    if (!this.balance.day.freezeUntilFirstServed || this.dayNumber > 1 || this.tutorialReleased) return false;
+    return this.spawned >= 1;
+  }
+
+  /** MEC-007 rule 2: the player pressed "Để tôi thử" after the first customer left; the day starts. */
+  releaseTutorial(): void {
+    this.tutorialReleased = true;
+  }
+
+  /** The first (tutorial) customer is still at the stall: arriving, waiting, eating or leaving. */
+  get firstCustomerPresent(): boolean {
+    return this.list.some((c) => c.id === 1);
   }
 
   update(dt: number): GameEvent[] {
@@ -176,16 +186,28 @@ export class DaySim {
   }
 
   /**
-   * MEC-008 rule 2: "Hỏi lại" on a spoken order. Costs `hints.askPatienceSeconds` of patience (not below
-   * `hints.minPatienceSeconds`), once per customer; the order is then shown explicitly. Grading is unchanged.
+   * MEC-008 rule 2: "Hỏi lại" on a spoken order, once a quarter of the patience has passed. Costs
+   * `hints.askPatienceSeconds` (not below `hints.minPatienceSeconds`), once per customer; grading is unchanged.
    */
   askAgain(customerId: number): boolean {
     const c = this.list.find((x) => x.id === customerId);
     if (this.isEnded || !c || c.state !== 'waiting' || c.order.style === 'chips' || c.order.clarified || c.order.tutorial) return false;
     const h = this.balance.hints;
+    if (!this.canAskAgain(c)) return false;
     c.patience = Math.max(Math.min(c.patience, h.minPatienceSeconds), c.patience - h.askPatienceSeconds);
     c.order.clarified = true;
     return true;
+  }
+
+  /** MEC-008 rule 2a: "Hỏi lại" only unlocks after `hints.askAfterShare` (1/4) of the customer's patience has passed. */
+  canAskAgain(c: Customer): boolean {
+    return (
+      c.state === 'waiting' &&
+      c.order.style !== 'chips' &&
+      !c.order.clarified &&
+      !c.order.tutorial &&
+      c.patience <= c.maxPatience * (1 - this.balance.hints.askAfterShare) + 1e-9
+    );
   }
 
   summary(): DaySummary {

@@ -3,7 +3,7 @@ id: MEC-008
 type: mechanic
 status: approved
 owner: game-design
-version: 0.2
+version: 0.3
 parent: GDD
 related: [MEC-005, MEC-006, MEC-007]
 studio_standard: 0.1
@@ -40,6 +40,7 @@ Ship **A + D** first, keep **B** for the meta milestone (M3, together with saved
 
 ## 5. Proposed rules (if A + D are approved)
 1. Spoken bubbles (explicit or implied) show a "Hỏi lại" button. Chip orders do not.
+2a. The button only appears once a quarter of the customer's patience has passed (`hints.askAfterShare` 0.25), so the player tries to read first (owner 2026-11-08); `DaySim.askAgain` refuses earlier taps.
 2. Tapping it costs `hints.askPatienceSeconds` (8 s) of patience, never below `hints.minPatienceSeconds` (3 s). The bubble then shows the explicit sentence (implied orders) or word chips (explicit orders). Once per customer.
 3. A phrase served with complain or scold is remembered for the session. The next order with that phrase shows its explicit sentence in small text under the phrase, at no cost.
 4. Hints never change grading; they only change what is shown.

@@ -1,5 +1,5 @@
 import type { DaySummary } from '../core/types';
-import { HintRing, IntroCard, SummaryOverlay, TutorialBar, WorldLabels, floatText, sayText, toast } from './fx';
+import { HintRing, IntroCard, SidePanel, SummaryOverlay, TutorialBar, WorldLabels, floatText, sayText } from './fx';
 import { RotatePrompt } from './rotatePrompt';
 import { STR } from './strings';
 import { injectStyles } from './styles';
@@ -25,19 +25,19 @@ export class Ui {
   readonly rotate: RotatePrompt;
   readonly tutorial: TutorialBar;
   readonly intro: IntroCard;
-  private toastLayer: HTMLDivElement;
+  readonly side: SidePanel;
   private fxLayer: HTMLDivElement;
 
   constructor(parent: HTMLElement, onReplay: () => void, onAsk: (customerId: number) => void) {
     injectStyles();
     this.root = el('div', 'htg-ui', parent);
     this.labels = new WorldLabels(el('div', '', this.root));
-    this.bubbles = new OrderBubbles(el('div', '', this.root), onAsk);
+    this.bubbles = new OrderBubbles(el('div', '', this.root), onAsk, () => this.side.rect);
     this.gauge = new HoldGauge(this.root);
     this.hint = new HintRing(this.root);
     this.fxLayer = el('div', '', this.root);
     this.tutorial = new TutorialBar(this.root);
-    this.toastLayer = el('div', 'htg-toasts', this.root);
+    this.side = new SidePanel(this.root);
     this.hud = new Hud(this.root);
     this.summary = new SummaryOverlay(this.root, onReplay);
     this.intro = new IntroCard(this.root, STR.start);
@@ -46,10 +46,6 @@ export class Ui {
 
   float(at: ScreenPoint, text: string, small = false): void {
     floatText(this.fxLayer, at, text, small);
-  }
-
-  toast(text: string): void {
-    toast(this.toastLayer, text);
   }
 
   say(at: ScreenPoint, text: string, tone: string): void {
@@ -71,7 +67,8 @@ export class Ui {
     this.hint.hide();
     this.bubbles.update([]);
     this.fxLayer.innerHTML = '';
-    this.toastLayer.innerHTML = '';
+    this.side.clear();
+
     this.tutorial.hide();
   }
 }

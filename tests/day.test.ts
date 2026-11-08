@@ -258,10 +258,14 @@ describe('MEC-007 day length and first-customer freeze', () => {
     expect(sim.releaseBlanch()).toBe('perfect');
   });
 
-  it('the clock starts once the first customer is served', () => {
+  it('the clock stays frozen after serving until the player releases the tutorial', () => {
     const sim = seated();
     cookPerfect(sim);
     sim.serve(sim.customers[0].table);
+    run(sim, cfg.eatSeconds + cfg.leaveSeconds + 1);
+    expect(sim.firstCustomerPresent).toBe(false);
+    expect(sim.frozen).toBe(true);
+    sim.releaseTutorial();
     expect(sim.frozen).toBe(false);
     const t0 = sim.time;
     run(sim, 10);
@@ -310,8 +314,17 @@ describe('MEC-008 ask again', () => {
     return { sim, c: sim.customers.find((c) => c.state === 'waiting' && c.order.style !== 'chips')! };
   };
 
+  it('is locked until a quarter of the patience has passed', () => {
+    const { sim, c } = spokenCustomer();
+    c.patience = c.maxPatience * 0.8;
+    expect(sim.askAgain(c.id)).toBe(false);
+    c.patience = c.maxPatience * 0.75;
+    expect(sim.askAgain(c.id)).toBe(true);
+  });
+
   it('costs patience once and marks the order clarified', () => {
     const { sim, c } = spokenCustomer();
+    c.patience = c.maxPatience * 0.7;
     const before = c.patience;
     expect(sim.askAgain(c.id)).toBe(true);
     expect(c.order.clarified).toBe(true);

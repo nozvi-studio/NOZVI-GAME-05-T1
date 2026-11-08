@@ -1,6 +1,6 @@
 // DOM overlay styles (GDD §10: high contrast, readable on a 5" phone in landscape).
 const CSS = `
-.htg-ui { position: fixed; inset: 0; pointer-events: none; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+.htg-ui { position: fixed; inset: 0; pointer-events: none; font-family: Roboto, "Segoe UI", -apple-system, system-ui, "Helvetica Neue", Arial, sans-serif;
   color: #fff7ea; user-select: none; -webkit-user-select: none; overflow: hidden; }
 .htg-hud { position: absolute; top: 10px; left: 12px; right: 12px; display: flex; justify-content: space-between; gap: 12px; }
 .htg-pill { background: rgba(28, 18, 12, 0.82); border: 2px solid #e8b04a; border-radius: 14px; padding: 6px 14px;
@@ -81,13 +81,14 @@ const CSS = `
   background: rgba(255,250,240,.96); color: #2a1a12; border: 2px solid #e8b04a; border-radius: 12px; padding: 5px 12px; text-align: center;
   font-weight: 700; font-size: clamp(12px, min(1.7vw, 3.4vh), 16px); box-shadow: 0 3px 10px rgba(0,0,0,.45); }
 .htg-tut.anchored { transform: translate(-50%, -100%); max-width: min(56vw, 380px); }
-.htg-toasts { position: absolute; left: 50%; top: 34%; transform: translateX(-50%); display: flex; flex-direction: column; gap: 8px; align-items: center; z-index: 4; }
-.htg-toast { background: rgba(28,18,12,.9); color: #fff7ea; border: 2px solid #ffd36b; border-radius: 14px; padding: 8px 16px; max-width: min(70vw, 560px);
-  text-align: center; font-weight: 800; font-size: clamp(13px, min(2vw, 4vh), 20px); animation: htg-toast 4.5s ease-out forwards; }
-@keyframes htg-toast { 0% { opacity: 0; transform: scale(.9); } 8%, 82% { opacity: 1; transform: scale(1); } 100% { opacity: 0; } }
 .htg-intro { position: absolute; inset: 0; z-index: 9; display: none; align-items: center; justify-content: center; padding: 16px;
   background: rgba(10,6,4,.55); pointer-events: auto; }
 .htg-intro .intro-text { font-size: clamp(15px, min(2.2vw, 4.4vh), 20px); font-weight: 700; line-height: 1.4; max-width: 30em; margin-bottom: 14px; }
+.htg-side { position: absolute; right: 12px; top: 22%; width: min(26vw, 300px); z-index: 5; pointer-events: auto; text-align: left;
+  background: rgba(255,250,240,.97); color: #2a1a12; border: 2px solid #e8b04a; border-radius: 12px; padding: 10px 32px 10px 12px;
+  font-weight: 700; line-height: 1.35; font-size: clamp(12px, min(1.6vw, 3.2vh), 16px); box-shadow: 0 3px 12px rgba(0,0,0,.5); }
+.htg-side .x { position: absolute; top: 3px; right: 4px; min-width: 26px; min-height: 26px; border: 0; background: transparent;
+  font: inherit; font-weight: 800; color: #7a5a3a; cursor: pointer; touch-action: manipulation; }
 .htg-summary { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(10,6,4,.6);
   pointer-events: auto; }
 .htg-card { background: #fffaf0; color: #2a1a12; border-radius: 18px; padding: 18px 28px; min-width: 260px; text-align: center;
@@ -102,6 +103,25 @@ const CSS = `
 .htg-card td + td { text-align: right; font-weight: 700; }
 .htg-card button { font: inherit; font-size: 20px; font-weight: 800; padding: 10px 34px; border: 0; border-radius: 12px; background: #e8b04a;
   color: #2a1a12; cursor: pointer; }
+/* Very short landscape viewports: a phone browser's address bar can leave ~260 px of height. */
+@media (max-height: 360px) {
+  .htg-hud { top: 4px; left: 6px; right: 6px; }
+  .htg-pill { font-size: 11px; padding: 2px 8px; border-width: 1.5px; border-radius: 10px; }
+  .htg-bubble { font-size: 10px; padding: 3px 5px 4px; max-width: 27vw; border-radius: 9px; }
+  .htg-bubble .row { display: inline-flex; margin: 0 2px 2px 0; }
+  .htg-chip { padding: 0 3px; border-radius: 6px; }
+  .htg-patience { height: 4px; }
+  .htg-ask { min-height: 22px; padding: 1px 9px; margin-bottom: 3px; }
+  .htg-tut { top: 4px; max-width: 30vw; font-size: 10.5px; padding: 2px 8px; border-width: 1.5px; border-radius: 9px; }
+  .htg-tut.anchored { max-width: 40vw; }
+  .htg-gauge { height: 42vh; width: 20px; }
+  .htg-say { font-size: 11px; padding: 3px 8px; max-width: 200px; }
+    .htg-card { padding: 10px 18px; max-height: 92vh; overflow: auto; }
+  .htg-card h1 { font-size: 20px; }
+  .htg-card table { font-size: 13px; margin-bottom: 8px; }
+  .htg-card button { font-size: 16px; padding: 6px 24px; }
+  .htg-intro .intro-text { font-size: 13px; margin-bottom: 8px; }
+}
 `;
 
 export function injectStyles(): void {

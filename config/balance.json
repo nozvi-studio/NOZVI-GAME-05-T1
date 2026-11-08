@@ -130,6 +130,7 @@
   },
   "hints": {
     "askPatienceSeconds": 8,
-    "minPatienceSeconds": 3
+    "minPatienceSeconds": 3,
+    "askAfterShare": 0.25
   }
 }
