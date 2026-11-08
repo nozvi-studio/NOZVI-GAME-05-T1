@@ -16,6 +16,7 @@ Only files listed here exist. Status: Draft / Approved / Deprecated.
 | MEC-003 | `docs/specs/mechanics/MEC-003-customers.md` | Customers, patience, day flow | Approved |
 | MEC-004 | `docs/specs/mechanics/MEC-004-serve-payment.md` | Serving and payment | Approved |
 | MEC-005 | `docs/specs/mechanics/MEC-005-amounts-spoken-orders-reactions.md` | Ingredient amounts, spoken orders, customer reactions and penalties (supersedes MEC-002 rules 3, 6, 7, MEC-003 rule 5, MEC-004 rule 3) | Approved |
+| MEC-006 | `docs/specs/mechanics/MEC-006-deviation-temperament-implied-orders.md` | Deviation scoring, reaction tiers, temperament, avoid requests (dislike / allergy), broth levels, implied orders, pacing (supersedes MEC-005 rules 5, 8-15) | Approved |
 | ARCH-002 | `docs/specs/ARCH-002-visual-readability-and-feedback.md` | Visual readability, polish and feedback requirements (VIS-xxx), acceptance, owner decisions | Approved |
 | PLAN-001 | `docs/plans/PLAN-001-visual-polish.md` | Ordered implementation plan for ARCH-002 (4 phases) | Approved |
 | STD | `docs/standards/README.md` | Studio standards + AI rules index (binding) | Approved |

@@ -19,6 +19,7 @@ export const STR = {
   trash: 'Bỏ',
   no: 'Không',
   full: 'Tối đa!',
+  brothLevels: ['ít', 'vừa', 'nhiều'],
   rotateTitle: 'Xoay ngang điện thoại để chơi',
   rotateSub: 'Game tạm dừng cho đến khi bạn xoay ngang',
   webglLost: 'Mất kết nối đồ họa. Tải lại trang?',
@@ -37,23 +38,6 @@ export const GARNISH_LABEL: Record<Garnish, string> = {
   pepper: 'Tiêu',
   sprouts: 'Giá',
 };
-
-/** Icons sit next to labels so orders are never colour-only. Shared by order chips and counter labels (VIS-105). */
-export const TOPPING_ICON: Record<Topping, string> = {
-  pork: '🥩',
-  shrimp: '🦐',
-  liver: '🫀',
-  quailEgg: '🥚',
-};
-
-export const GARNISH_ICON: Record<Garnish, string> = {
-  scallion: '🌿',
-  pepper: '🧂',
-  sprouts: '🌱',
-};
-
-/** Icons for the labelled counter objects that are not ingredients. */
-export const OBJECT_ICON = { bowl: '🥣', trash: '🗑️' } as const;
 
 export const GRADE_LABEL: Record<Grade, string> = {
   perfect: 'Hoàn hảo!',

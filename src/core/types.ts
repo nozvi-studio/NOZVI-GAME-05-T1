@@ -18,16 +18,32 @@ export interface OrderLine<T extends Ingredient> {
   portions: number;
 }
 
+/** MEC-006 rule 3: an ingredient the customer does not want. Allergy is never forgiven. */
+export type AvoidKind = 'dislike' | 'allergy';
+export interface Avoid {
+  item: Ingredient;
+  kind: AvoidKind;
+}
+
+/** MEC-006: how the order is shown. Implied orders are a fixed phrase standing for a known recipe. */
+export type OrderStyle = 'chips' | 'explicit' | 'implied';
+
 export interface Order {
   toppings: OrderLine<Topping>[];
   garnishes: OrderLine<Garnish>[];
-  /** "không X": an ingredient the customer explicitly does not want (MEC-005 rule 4). */
-  exclude: Ingredient | null;
-  /** Shown as one spoken sentence instead of chips (MEC-005 rule 5). */
-  spoken: boolean;
+  /** Broth level: 1 ít nước, 2 vừa nước, 3 nhiều nước (MEC-006). */
+  broth: number;
+  avoid: Avoid | null;
+  style: OrderStyle;
+  /** Implied recipe id when `style` is 'implied' (see `implied.ts`). */
+  implied: string | null;
+  /** Tutorial customers see portion counts and the broth zone (MEC-006 rules 5-6). */
+  tutorial: boolean;
 }
 
 export type CustomerKind = 'regular' | 'hurried';
+/** Hidden temperament (MEC-006 rule 9). */
+export type Temper = 'easy' | 'normal' | 'picky';
 /** arriving → waiting → (eating | leaving-angry) → leaving → removed */
 export type CustomerState = 'arriving' | 'waiting' | 'eating' | 'leaving';
 
@@ -35,6 +51,7 @@ export interface Customer {
   id: number;
   table: number;
   kind: CustomerKind;
+  temper: Temper;
   state: CustomerState;
   order: Order;
   /** Seconds of patience left while waiting. */
@@ -48,6 +65,8 @@ export interface Customer {
 
 export interface Bowl {
   noodles: Grade | null;
+  /** Blanch hold time minus the ideal, in seconds (+ overcooked, − undercooked). */
+  noodleError: number | null;
   /** Portions per topping (MEC-005 rule 1). */
   toppings: Record<Topping, number>;
   broth: { fill: number; grade: Grade } | null;
@@ -55,8 +74,16 @@ export interface Bowl {
   garnishes: Record<Garnish, number>;
 }
 
-/** MEC-005 rules 12-14: how the customer reacts to the served bowl. */
-export type Reaction = 'happy' | 'ok' | 'complain' | 'scold';
+/** MEC-006 rule 8: reaction tiers, mildest first. */
+export type Reaction = 'happy' | 'ok' | 'grumble' | 'complain' | 'scold';
+
+/** The biggest reason for the deviation, so the customer can name it (MEC-006 rule 13). */
+export interface Cause {
+  kind: 'allergy' | 'dislike' | 'noodles' | 'broth' | 'missing' | 'extra' | 'amount';
+  item?: Ingredient;
+  /** +1 too much / overcooked, −1 too little / undercooked. */
+  sign?: number;
+}
 
 export interface Kitchen {
   /** Graded noodles sitting in the basket, waiting to go into the bowl. */
@@ -69,16 +96,17 @@ export interface Kitchen {
 }
 
 export interface Payment {
-  /** Price actually paid (0 on scold, part of the price on complain). */
+  /** Price actually paid (part of the price on complain / scold). */
   price: number;
   tip: number;
   total: number;
-  /** 0..1 */
+  /** 0..1, derived from the deviation (1 = exact). */
   quality: number;
   perfect: boolean;
   reaction: Reaction;
-  /** An excluded ingredient was in the bowl. */
-  forbidden: boolean;
+  /** MEC-006 deviation D (0 = exact). */
+  deviation: number;
+  cause: Cause | null;
 }
 
 export interface DaySummary {

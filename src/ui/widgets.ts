@@ -1,7 +1,7 @@
 import type { Order } from '../core/types';
 import type { LineProgress, OrderProgress } from './orderProgress';
-import { amountWord, spokenOrder } from './speech';
-import { GARNISH_ICON, GARNISH_LABEL, STR, TOPPING_ICON, TOPPING_LABEL, clock, money } from './strings';
+import { avoidChip, brothWord, lineText, spokenOrder } from './speech';
+import { STR, clock, money } from './strings';
 
 /** Approximate bottom edge of the HUD bar, in CSS px. */
 const HUD_BOTTOM_PX = 58;
@@ -35,7 +35,7 @@ export class Hud {
     if (key === this.last) return;
     this.last = key;
     this.money.innerHTML = `${STR.revenue}: <b>${money(revenue)}</b> / ${STR.target}: ${money(target)}`;
-    this.timer.textContent = `⏱ ${STR.timeLeft} ${clock(timeLeft)}`;
+    this.timer.textContent = `${STR.timeLeft} ${clock(timeLeft)}`;
     this.timer.classList.toggle('low', timeLeft <= 30);
   }
 }
@@ -53,7 +53,7 @@ export interface BubbleData {
 
 interface Chip {
   root: HTMLSpanElement;
-  count: HTMLSpanElement;
+  count: HTMLSpanElement | null;
 }
 
 interface BubbleView {
@@ -61,16 +61,15 @@ interface BubbleView {
   bar: HTMLDivElement;
   toppingChips: Chip[];
   garnishChips: Chip[];
-  excludeChip: HTMLSpanElement | null;
+  brothChip: Chip | null;
   spoken: boolean;
 }
 
-/** MEC-005 rule 8: portions given / wanted; green when exact, red when over. */
-function showChip(chip: Chip | undefined, p: LineProgress): void {
+/** MEC-006 rule 5: green when exact, never red; tutorial chips also show given/wanted. */
+function showChip(chip: Chip | undefined | null, p: LineProgress): void {
   if (!chip) return;
-  chip.count.textContent = ` ${p.given}/${p.wanted}`;
+  if (chip.count) chip.count.textContent = ` ${p.given}/${p.wanted}`;
   chip.root.classList.toggle('done', p.given === p.wanted);
-  chip.root.classList.toggle('over', p.given > p.wanted);
 }
 
 /** One order bubble per waiting customer, above its table (icons + labels, not colour-only). */
@@ -97,11 +96,11 @@ export class OrderBubbles {
       const p = Math.max(0, Math.min(1, b.patience));
       bubble.bar.style.width = `${p * 100}%`;
       bubble.bar.style.backgroundColor = p > 0.5 ? '#3fbf5a' : p > 0.25 ? '#e8c547' : '#e04848';
-      // Spoken orders show no progress: reading the sentence is the challenge (MEC-005 rule 8).
+      // Spoken orders show no progress: reading the sentence is the challenge (MEC-006 rule 5).
       if (!bubble.spoken) {
         b.progress.toppings.forEach((p, i) => showChip(bubble.toppingChips[i], p));
         b.progress.garnishes.forEach((p, i) => showChip(bubble.garnishChips[i], p));
-        bubble.excludeChip?.classList.toggle('over', b.progress.excludeViolated);
+        bubble.brothChip?.root.classList.toggle('done', b.progress.brothOk);
         bubble.root.classList.toggle('ready', b.progress.ready);
       }
     }
@@ -115,28 +114,25 @@ export class OrderBubbles {
 
   private create(b: BubbleData): BubbleView {
     const root = el('div', 'htg-bubble', this.root);
-    const view: BubbleView = { root, bar: root as HTMLDivElement, toppingChips: [], garnishChips: [], excludeChip: null, spoken: b.order.spoken };
-    if (b.order.spoken) {
+    const spoken = b.order.style !== 'chips';
+    const view: BubbleView = { root, bar: root, toppingChips: [], garnishChips: [], brothChip: null, spoken };
+    if (spoken) {
       root.classList.add('spoken');
       el('div', 'say', root).textContent = `“${spokenOrder(b.order, b.id)}”`;
     } else {
-      // The amount word sits in its own span so short phones can hide it; the "given/wanted" count still shows the amount.
-      const chip = (row: HTMLElement, cls: string, portions: number, text: string): Chip => {
+      const chip = (row: HTMLElement, cls: string, text: string, counted: boolean): Chip => {
         const c = el('span', cls, row);
-        if (amountWord(portions)) el('span', 'amt', c).textContent = `${amountWord(portions)} `;
         el('span', '', c).textContent = text;
-        return { root: c, count: el('span', 'n', c) };
+        return { root: c, count: counted ? el('span', 'n', c) : null };
       };
+      const t = b.order.tutorial;
       const tops = el('div', 'row', root);
-      view.toppingChips = b.order.toppings.map((l) => chip(tops, 'htg-chip', l.portions, `${TOPPING_ICON[l.item]} ${TOPPING_LABEL[l.item]}`));
+      view.toppingChips = b.order.toppings.map((l) => chip(tops, 'htg-chip', lineText(l), t));
       const gars = el('div', 'row', root);
-      view.garnishChips = b.order.garnishes.map((l) => chip(gars, 'htg-chip g', l.portions, `${GARNISH_ICON[l.item]} ${GARNISH_LABEL[l.item]}`));
-      const ex = b.order.exclude;
-      if (ex) {
-        const label = ex in TOPPING_LABEL ? TOPPING_LABEL[ex as keyof typeof TOPPING_LABEL] : GARNISH_LABEL[ex as keyof typeof GARNISH_LABEL];
-        view.excludeChip = el('span', 'htg-chip no', el('div', 'row', root));
-        view.excludeChip.textContent = `🚫 ${STR.no} ${label.toLocaleLowerCase('vi')}`;
-      }
+      view.garnishChips = b.order.garnishes.map((l) => chip(gars, 'htg-chip g', lineText(l), t));
+      const extra = el('div', 'row', root);
+      view.brothChip = chip(extra, 'htg-chip w', brothWord(b.order.broth), false);
+      if (b.order.avoid) el('span', 'htg-chip no', extra).textContent = avoidChip(b.order.avoid);
     }
     if (b.hurried) el('span', 'tag', root).textContent = STR.hurried;
     const track = el('div', 'htg-patience', root);
@@ -150,22 +146,27 @@ export interface GaugeData {
   label: string;
   /** All values are fractions 0..1 of the gauge height. */
   value: number;
-  perfect: [number, number];
-  good: [number, number];
+  /** Coloured zones; null hides them (MEC-006 rule 6: broth after the tutorial). */
+  perfect: [number, number] | null;
+  good: [number, number] | null;
+  /** Labelled tick marks, e.g. ít / vừa / nhiều nước. */
+  ticks?: Array<{ at: number; label: string }>;
 }
 
-/** Vertical hold gauge for blanch and broth with green (perfect) and yellow (good) zones. */
+/** Vertical hold gauge with optional green (perfect) / yellow (good) zones and labelled ticks. */
 export class HoldGauge {
   private root: HTMLDivElement;
   private good: HTMLDivElement;
   private perfect: HTMLDivElement;
   private needle: HTMLDivElement;
   private label: HTMLDivElement;
+  private ticks: HTMLDivElement[] = [];
 
   constructor(parent: HTMLElement) {
     this.root = el('div', 'htg-gauge', parent);
     this.good = el('div', 'zone good', this.root);
     this.perfect = el('div', 'zone perfect', this.root);
+    for (let i = 0; i < 3; i++) this.ticks.push(el('div', 'tick', this.root));
     this.needle = el('div', 'needle', this.root);
     this.label = el('div', 'htg-gauge-label', parent);
     this.hide();
@@ -176,10 +177,23 @@ export class HoldGauge {
     this.root.style.display = this.label.style.display = 'block';
     this.root.style.left = this.label.style.left = `${g.at.x}px`;
     this.root.style.top = this.label.style.top = `${g.at.y}px`;
-    this.good.style.bottom = pct(g.good[0]);
-    this.good.style.height = pct(g.good[1] - g.good[0]);
-    this.perfect.style.bottom = pct(g.perfect[0]);
-    this.perfect.style.height = pct(g.perfect[1] - g.perfect[0]);
+    const zone = (e: HTMLDivElement, z: [number, number] | null) => {
+      e.style.display = z ? 'block' : 'none';
+      if (z) {
+        e.style.bottom = pct(z[0]);
+        e.style.height = pct(z[1] - z[0]);
+      }
+    };
+    zone(this.good, g.good);
+    zone(this.perfect, g.perfect);
+    this.ticks.forEach((t, i) => {
+      const tick = g.ticks?.[i];
+      t.style.display = tick ? 'block' : 'none';
+      if (tick) {
+        t.style.bottom = pct(tick.at);
+        t.textContent = tick.label;
+      }
+    });
     this.needle.style.bottom = pct(g.value);
     this.label.textContent = g.label;
   }

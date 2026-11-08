@@ -1,10 +1,10 @@
 import * as THREE from 'three';
-import { DaySim } from '../core';
+import { DaySim, nearestBrothLevel } from '../core';
 import type { Bowl, GameEvent, Grade, HintTarget } from '../core/types';
 import { GARNISHES, TOPPINGS } from '../core/types';
 import { PointerInput } from '../input';
 import { COUNTER_TOP, CustomerViews, SEATED_HEAD_TOP, cameraFov, createStreetScene, type StreetScene } from '../scene';
-import { GARNISH_ICON, GARNISH_LABEL, GRADE_LABEL, OBJECT_ICON, STR, TOPPING_ICON, TOPPING_LABEL, Ui, money, orderProgress, reactionLine, type BubbleData, type ScreenPoint, type WorldLabel } from '../ui';
+import { GARNISH_LABEL, GRADE_LABEL, STR, TOPPING_LABEL, Ui, brothWord, leaveLine, money, orderProgress, reactionLine, type BubbleData, type ScreenPoint, type WorldLabel } from '../ui';
 
 const MAX_DT = 0.1; // ARCHITECTURE §6: hidden tab must not skip the day.
 
@@ -135,11 +135,12 @@ export class Game {
       const at = this.project(this.headPos(c.table, 0.3));
       this.ui.float(at, `+${money(p.total)}`);
       if (p.perfect) this.ui.float({ x: at.x, y: at.y + 30 }, GRADE_LABEL.perfect, true);
-      // MEC-005 §8: the customer says how they feel; scold names the ingredient they said "không" to.
+      // MEC-006 rule 13: the customer says how they feel, naming the worst cause.
       const say = this.project(this.headPos(c.table, 0.45));
-      this.ui.say(say, reactionLine(p.reaction, c.id, p.forbidden ? c.order.exclude : null), p.reaction);
+      this.ui.say(say, reactionLine(p.reaction, p.cause, c.temper, c.id), p.reaction);
     } else if (e.type === 'customerGaveUp') {
-      this.ui.float(this.project(this.headPos(e.customer.table, 0.3)), '😠', true);
+      // MEC-006 rule 14: a line, then they walk off.
+      this.ui.say(this.project(this.headPos(e.customer.table, 0.45)), leaveLine(e.customer.temper, e.customer.id), 'leave');
     } else if (e.type === 'dayEnded') {
       this.input.cancel();
       this.ui.showSummary(e.summary);
@@ -156,7 +157,8 @@ export class Game {
     // Grade pop-ups on every grading, including auto-release at the max hold.
     if (k.basket !== null && this.prevBasket === null) this.ui.float(this.objPos('basket', 0.7), GRADE_LABEL[k.basket], true);
     const broth = k.bowl.broth;
-    if (broth && !this.prevBroth) this.ui.float(this.objPos('bowl', 0.6), GRADE_LABEL[broth.grade], true);
+    // MEC-006 rule 6: name the level that was poured (grading uses the customer's level at serve time).
+    if (broth && !this.prevBroth) this.ui.float(this.objPos('bowl', 0.6), brothWord(nearestBrothLevel(broth.fill, this.sim.balance.broth)), true);
     this.prevBasket = k.basket;
     this.prevBroth = broth !== null;
   }
@@ -175,7 +177,7 @@ export class Game {
         order: c.order,
         patience: c.patience / c.maxPatience,
         hurried: c.kind === 'hurried',
-        progress: orderProgress(c.order, sim.kitchen.bowl),
+        progress: orderProgress(c.order, sim.kitchen.bowl, sim.balance.broth),
       });
     }
     this.ui.bubbles.update(bubbles);
@@ -191,13 +193,17 @@ export class Game {
         good: [(ideal - g) / max, (ideal + g) / max],
       });
     } else if (k.pouring !== null) {
-      const { targetFill: t, perfectTolerance: p, goodTolerance: g, maxFill: max } = b.broth;
+      const { perfectTolerance: p, goodTolerance: g, maxFill: max, levelFill } = b.broth;
+      // MEC-006 rule 6: zones only while a tutorial customer waits; otherwise ít / vừa / nhiều ticks.
+      const tut = sim.customers.find((c) => c.state === 'waiting' && c.order.tutorial);
+      const t = tut ? levelFill[tut.order.broth - 1] : null;
       this.ui.gauge.show({
         at: this.objPos('pot', 0.5, -0.6),
         label: STR.broth,
         value: k.pouring / max,
-        perfect: [(t - p) / max, (t + p) / max],
-        good: [(t - g) / max, (t + g) / max],
+        perfect: t === null ? null : [(t - p) / max, (t + p) / max],
+        good: t === null ? null : [(t - g) / max, (t + g) / max],
+        ticks: t === null ? levelFill.map((f, i) => ({ at: f / max, label: STR.brothLevels[i] })) : undefined,
       });
     } else this.ui.gauge.hide();
 
@@ -209,7 +215,7 @@ export class Game {
   }
 
   /**
-   * Counter labels: pill with icon + word, placed on or just below the front lip so they never cover the food (VIS-105).
+   * Counter labels: one-word pills (no icons, MEC-006), placed on or just below the front lip so they never cover the food (VIS-105).
    * Pot and basket have no fixed label: the jars hide the pot wall on phones; the hold gauge names them while in use.
    */
   private labels(): WorldLabel[] {
@@ -217,11 +223,11 @@ export class Game {
     // The 2x2 trays are 0.6 apart but a pill is wider, so push the two columns apart to avoid overlapping labels.
     TOPPINGS.forEach((t, i) => {
       const dx = i % 2 === 0 ? -0.17 : 0.17;
-      out.push({ key: t, icon: TOPPING_ICON[t], text: TOPPING_LABEL[t], at: this.objPos(`topping:${t}`, 0.06, dx, 0.27) });
+      out.push({ key: t, text: TOPPING_LABEL[t], at: this.objPos(`topping:${t}`, 0.06, dx, 0.27) });
     });
-    for (const g of GARNISHES) out.push({ key: g, icon: GARNISH_ICON[g], text: GARNISH_LABEL[g], at: this.objPos(`garnish:${g}`, 0, 0, 0.24) });
-    out.push({ key: 'bowl', icon: OBJECT_ICON.bowl, text: STR.bowl, at: this.objPos('bowl', 0, 0, 0.36) });
-    out.push({ key: 'trash', icon: OBJECT_ICON.trash, text: STR.trash, at: this.objPos('trash', 0.05, 0, 0.3) });
+    for (const g of GARNISHES) out.push({ key: g, text: GARNISH_LABEL[g], at: this.objPos(`garnish:${g}`, 0, 0, 0.24) });
+    out.push({ key: 'bowl', text: STR.bowl, at: this.objPos('bowl', 0, 0, 0.36) });
+    out.push({ key: 'trash', text: STR.trash, at: this.objPos('trash', 0.05, 0, 0.3) });
     return out;
   }
 

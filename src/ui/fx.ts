@@ -13,7 +13,7 @@ export function floatText(root: HTMLElement, at: ScreenPoint, text: string, smal
   setTimeout(() => e.remove(), 2000);
 }
 
-/** Customer's spoken reaction above their head (MEC-005 §8). `tone` styles the border. */
+/** Customer's spoken line above their head (MEC-006 rules 13-14). `tone` styles the border. */
 export function sayText(root: HTMLElement, at: ScreenPoint, text: string, tone: string): void {
   const e = el('div', `htg-say ${tone}`, root);
   e.textContent = text;
@@ -45,8 +45,6 @@ export class HintRing {
 
 export interface WorldLabel {
   key: string;
-  /** Emoji shown before the word, same set as the order chips. */
-  icon?: string;
   text: string;
   at: ScreenPoint;
 }
@@ -62,8 +60,7 @@ export class WorldLabels {
       let e = this.labels.get(l.key);
       if (!e) {
         e = el('div', 'htg-label', this.root);
-        if (l.icon) el('span', 'ico', e).textContent = `${l.icon} `;
-        el('span', '', e).textContent = l.text;
+        e.textContent = l.text;
         this.labels.set(l.key, e);
       }
       e.style.left = `${l.at.x}px`;

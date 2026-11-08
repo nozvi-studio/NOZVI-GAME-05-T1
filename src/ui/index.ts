@@ -4,11 +4,11 @@ import { RotatePrompt } from './rotatePrompt';
 import { injectStyles } from './styles';
 import { HoldGauge, Hud, OrderBubbles, el, type ScreenPoint } from './widgets';
 
-export { STR, TOPPING_LABEL, GARNISH_LABEL, TOPPING_ICON, GARNISH_ICON, OBJECT_ICON, GRADE_LABEL, money } from './strings';
+export { STR, TOPPING_LABEL, GARNISH_LABEL, GRADE_LABEL, money } from './strings';
 export type { BubbleData, GaugeData, ScreenPoint } from './widgets';
 export { orderProgress } from './orderProgress';
 export { shouldAskRotate } from './rotatePrompt';
-export { reactionLine } from './speech';
+export { brothWord, leaveLine, reactionLine } from './speech';
 export type { WorldLabel } from './fx';
 
 /** DOM overlay above the canvas. Takes screen positions only; never touches Three.js. */

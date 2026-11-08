@@ -13,6 +13,8 @@ updated: 2026-11-08
 
 > **Approved by the owner on 2026-11-08** (answers in §12). Every number lives in `config/balance.json`. Once approved, MEC-005 owns amounts, spoken orders and reactions, and it **supersedes** MEC-002 rules 3, 6, 7, MEC-003 rule 5 and MEC-004 rule 3 (those specs will point here).
 
+> **Rules 5 and 8–15 are superseded by MEC-006** (deviation scoring, tiers, temperament, avoid requests, implied orders). Rules 1–4, 6, 7 still apply.
+
 ## 1. Purpose
 Make orders feel like real street-stall requests ("nhiều hành, ít thịt, không tiêu") and make cooking mistakes matter: the player must read carefully, tap the right number of times, and cook well, or the customer complains, refuses to pay and scolds.
 

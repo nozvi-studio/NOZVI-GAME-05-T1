@@ -6,6 +6,8 @@ import type { Garnish, Grade, Kitchen, Topping } from './types';
 // MEC-001 / MEC-002: cooking actions on the single in-progress bowl.
 export class KitchenState {
   readonly state: Kitchen = { basket: null, blanching: null, pouring: null, bowl: emptyBowl() };
+  /** Hold time minus ideal for the noodles in the basket (MEC-006 rule 7). */
+  private basketError: number | null = null;
 
   constructor(private readonly balance: Balance) {}
 
@@ -33,6 +35,7 @@ export class KitchenState {
     const k = this.state;
     if (k.blanching === null) return null;
     const grade = gradeBlanch(k.blanching, this.balance.blanch);
+    this.basketError = Math.round((k.blanching - this.balance.blanch.idealSeconds) * 1000) / 1000;
     k.blanching = null;
     k.basket = grade;
     return grade;
@@ -42,7 +45,9 @@ export class KitchenState {
     const k = this.state;
     if (k.basket === null || k.bowl.noodles !== null) return false;
     k.bowl.noodles = k.basket;
+    k.bowl.noodleError = this.basketError;
     k.basket = null;
+    this.basketError = null;
     return true;
   }
 

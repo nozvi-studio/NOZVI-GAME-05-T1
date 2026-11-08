@@ -13,29 +13,28 @@ const CSS = `
   border-bottom: 0; border-top-color: #fffaf0; }
 .htg-bubble .row { display: flex; flex-wrap: wrap; gap: 3px; margin-bottom: 3px; }
 .htg-chip { background: #f3e2c0; border-radius: 8px; padding: 1px 6px; white-space: nowrap; }
-.htg-chip.g { background: #d9efd2; }
+.htg-chip.g { background: #ebe4d3; } /* neutral: green means "amount exact" only (MEC-006 rule 5) */
 .htg-chip .n { font-weight: 800; color: #7a5a3a; }
-.htg-chip.done { opacity: .6; background: #cfe9c6; }
-.htg-chip.over { opacity: 1; background: #f7c9c2; outline: 2px solid #e04848; }
+.htg-chip.done { background: #bfe6b4; color: #1f5e2a; }
 .htg-chip.no { background: #eee3dc; color: #6b3a2a; }
-.htg-bubble.spoken { min-width: min(40vw, 170px); max-width: min(46vw, 260px); }
-.htg-chip .amt { font-weight: 800; color: #8a3a1a; }
+.htg-chip.w { background: #f2dfb8; }
+.htg-bubble.spoken { min-width: min(24vw, 160px); max-width: min(31vw, 260px); } /* three must fit side by side */
 /* Short landscape phones: three bubbles must fit side by side (MEC-005 chips are wider). */
 @media (max-height: 480px) {
   .htg-bubble { max-width: 31vw; padding: 4px 6px 6px; }
   .htg-bubble.spoken { min-width: 0; max-width: 31vw; }
   .htg-chip { padding: 0 4px; }
-  .htg-chip .amt { display: none; }
 }
 .htg-bubble .say { font-style: italic; font-weight: 700; line-height: 1.25; margin-bottom: 4px; }
 .htg-say { position: absolute; transform: translate(-50%, -100%); background: #fffaf0; color: #2a1a12; border-radius: 12px; padding: 5px 10px;
   max-width: 240px; font-weight: 800; font-size: clamp(12px, min(1.8vw, 3.6vh), 16px); text-align: center; box-shadow: 0 3px 10px rgba(0,0,0,.45);
   border: 2px solid #9a8a70; animation: htg-say 2.8s ease-out forwards; }
 .htg-say.happy { border-color: #3fbf5a; }
-.htg-say.complain { border-color: #e8a03a; }
+.htg-say.grumble { border-color: #d6b24a; }
+.htg-say.leave { border-color: #8a7a6a; font-style: italic; }
+.htg-say.complain { border: 3px solid #e8762a; }
 .htg-say.scold { border: 3px solid #e04848; background: #fff0ee; color: #8a1f1f; }
 @keyframes htg-say { 0% { opacity: 0; margin-top: 8px; } 10%, 80% { opacity: 1; margin-top: 0; } 100% { opacity: 0; margin-top: -10px; } }
-.htg-chip.done::before { content: "✓ "; font-weight: 800; color: #2e8b3e; }
 .htg-bubble.ready { box-shadow: 0 0 0 3px #3fbf5a, 0 3px 10px rgba(0,0,0,.45); }
 .htg-bubble .tag { position: absolute; top: -10px; right: -6px; background: #8e5ad1; color: #fff; border-radius: 8px; padding: 0 6px; font-size: 11px; }
 .htg-patience { height: 7px; background: #ddd; border-radius: 4px; overflow: hidden; }
@@ -45,6 +44,9 @@ const CSS = `
 .htg-gauge .zone { position: absolute; left: 0; right: 0; }
 .htg-gauge .good { background: #e8c547; }
 .htg-gauge .perfect { background: #3fbf5a; }
+.htg-gauge .tick { position: absolute; left: 0; right: 0; height: 2px; background: rgba(255,247,234,.85); }
+.htg-gauge .tick { font-size: 10px; line-height: 0; text-indent: 30px; white-space: nowrap; color: #fff7ea; text-shadow: 0 1px 2px #000; }
+.htg-gauge { overflow: visible; }
 .htg-gauge .needle { position: absolute; left: -2px; right: -2px; height: 4px; background: #fff; box-shadow: 0 0 4px #000; margin-bottom: -2px; }
 .htg-gauge .label { position: absolute; left: 50%; bottom: 100%; }
 .htg-gauge-label { position: absolute; transform: translate(-50%, 6px); font-weight: 700; font-size: 13px; text-shadow: 0 1px 3px #000; }
@@ -54,13 +56,12 @@ const CSS = `
 @keyframes htg-float { from { opacity: 1; margin-top: 0; } to { opacity: 0; margin-top: -60px; } }
 .htg-hint { position: absolute; width: 64px; height: 64px; margin: -32px 0 0 -32px; border: 4px solid #ffd36b; border-radius: 50%;
   box-shadow: 0 0 12px #ffd36b; animation: htg-pulse 1s ease-in-out infinite; }
-.htg-hint::after { content: "👆"; position: absolute; left: 34px; top: 30px; font-size: 30px; }
 @keyframes htg-pulse { 0%,100% { transform: scale(.8); opacity: .9; } 50% { transform: scale(1.15); opacity: .5; } }
 .htg-label { position: absolute; transform: translate(-50%, 0); background: rgba(28,18,12,.86); border: 1.5px solid rgba(255,214,140,.55);
   border-radius: 999px; padding: 1px 8px; color: #fff7ea; box-shadow: 0 1px 4px rgba(0,0,0,.5);
   font-size: clamp(12px, min(1.7vw, 3.4vh), 15px); font-weight: 700; white-space: nowrap; }
-/* Short landscape phones: the row of counter labels is too tight for icons (they stay on the order chips). */
-@media (max-height: 480px) { .htg-label .ico { display: none; } .htg-label { padding: 0 6px; } }
+/* Short landscape phones: tighter counter labels. */
+@media (max-height: 480px) { .htg-label { padding: 0 6px; } }
 .htg-rotate { position: absolute; inset: 0; z-index: 10; display: none; flex-direction: column; align-items: center; justify-content: center;
   gap: 18px; padding: 24px; text-align: center; background: rgba(14, 9, 6, .96); pointer-events: auto; }
 .htg-rotate .phone { width: 56px; height: 96px; border: 5px solid #ffd36b; border-radius: 12px; position: relative;

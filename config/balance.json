@@ -10,24 +10,71 @@
     "targetFill": 0.8,
     "perfectTolerance": 0.06,
     "goodTolerance": 0.15,
-    "maxFill": 1.2
+    "maxFill": 1.2,
+    "levelFill": [
+      0.55,
+      0.8,
+      1.05
+    ]
   },
-  "quality": {
-    "gradeScore": {
-      "perfect": 1.0,
-      "good": 0.6,
-      "bad": 0.2
+  "amounts": {
+    "maxPortions": 4,
+    "portionWeights": [
+      0.25,
+      0.5,
+      0.25
+    ]
+  },
+  "orders": {
+    "tutorialCustomers": 3,
+    "brothWeights": [
+      0.25,
+      0.5,
+      0.25
+    ],
+    "avoidChance": 0.3,
+    "avoidKindWeights": {
+      "dislike": 0.7,
+      "allergy": 0.3
     },
+    "spokenFromSeconds": 30,
+    "spokenChanceStart": 0.3,
+    "spokenChanceEnd": 0.8,
+    "impliedShareStart": 0.1,
+    "impliedShareEnd": 0.6
+  },
+  "deviation": {
+    "noodleWeight": 1.5,
+    "noodleUnitSeconds": 1.0,
+    "brothWeight": 1.5,
+    "brothUnitFill": 0.15,
+    "missingBroth": 6,
+    "portionWeight": 1,
+    "dislikePortionWeight": 1.5,
+    "dislikeScoldPortions": 2,
+    "tiers": [
+      0.5,
+      1.5,
+      3,
+      5
+    ]
+  },
+  "temper": {
     "weights": {
-      "noodles": 0.3,
-      "broth": 0.2,
-      "toppings": 0.35,
-      "garnishes": 0.15
+      "easy": 0.3,
+      "normal": 0.5,
+      "picky": 0.2
     },
-    "missingPenalty": 0.34,
-    "portionPenalty": 0.12,
-    "forbiddenPenalty": 0.5,
-    "perfectBowlThreshold": 0.9
+    "shift": {
+      "easy": -1,
+      "normal": 0,
+      "picky": 1
+    }
+  },
+  "reactions": {
+    "okTipRatio": 0.5,
+    "complainPriceRatio": 0.5,
+    "scoldPayRatio": 0.3
   },
   "day": {
     "lengthSeconds": 180,
@@ -67,29 +114,11 @@
     "garnishesPerOrder": {
       "min": 1,
       "max": 2
-    }
+    },
+    "spawnIntervalMidSeconds": 9.5
   },
   "payment": {
     "price": 30,
     "maxTip": 15
-  },
-  "amounts": {
-    "maxPortions": 4,
-    "portionWeights": [
-      0.25,
-      0.5,
-      0.25
-    ]
-  },
-  "orders": {
-    "exclusionChance": 0.3,
-    "spokenFromSeconds": 30,
-    "spokenChance": 0.5
-  },
-  "reactions": {
-    "scoldBelow": 0.35,
-    "complainBelow": 0.6,
-    "complainPriceRatio": 0.5,
-    "scoldFine": 0
   }
 }

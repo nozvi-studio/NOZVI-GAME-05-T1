@@ -18,7 +18,7 @@ function cookPerfect(sim: DaySim, blanchSeconds = defaultBalance.blanch.idealSec
   sim.moveNoodlesToBowl();
   for (const l of toppings) for (let i = 0; i < l.portions; i++) sim.addTopping(l.item);
   sim.startPour();
-  run(sim, defaultBalance.broth.targetFill / defaultBalance.broth.fillPerSecond);
+  run(sim, defaultBalance.broth.levelFill[sim.customers[0].order.broth - 1] / defaultBalance.broth.fillPerSecond);
   sim.releasePour();
   for (const l of garnishes) for (let i = 0; i < l.portions; i++) sim.addGarnish(l.item);
 }
@@ -38,9 +38,13 @@ describe('MEC-003 customers & day', () => {
     expect(sim.customers[0].order).toEqual({
       toppings: [{ item: 'pork', portions: 2 }],
       garnishes: [{ item: 'scallion', portions: 2 }],
-      exclude: null,
-      spoken: false,
+      broth: 2,
+      avoid: null,
+      style: 'chips',
+      implied: null,
+      tutorial: true,
     });
+    expect(sim.customers[0].temper).toBe('easy');
   });
 
   it('a regular customer gives up after their patience runs out', () => {
@@ -156,56 +160,78 @@ describe('MEC-004 serve & payment', () => {
   });
 });
 
-describe('MEC-005 orders and reactions in the day', () => {
-  it('scold: an excluded ingredient means no payment, an angry exit and a lost customer', () => {
+describe('MEC-006 orders and reactions in the day', () => {
+  it('scold: an allergy ingredient means an angry exit and a lost customer; an easy customer still pays part', () => {
     const sim = seated();
     const c = sim.customers[0];
-    c.order.exclude = 'pepper';
+    c.order.avoid = { item: 'shrimp', kind: 'allergy' };
     cookPerfect(sim);
-    sim.addGarnish('pepper');
+    sim.addTopping('shrimp');
     const p = sim.serve(c.table);
     expect(p?.reaction).toBe('scold');
-    expect(p?.total).toBe(0);
-    expect(sim.revenue).toBe(0);
+    expect(p?.cause).toEqual({ kind: 'allergy', item: 'shrimp' });
+    expect(p?.total).toBe(Math.round(defaultBalance.payment.price * defaultBalance.reactions.scoldPayRatio));
     expect(c.state).toBe('leaving');
     expect(c.outcome).toBe('angry');
     expect(sim.summary()).toMatchObject({ lost: 1, served: 0 });
-    expect(sim.kitchen.bowl.noodles).toBeNull();
   });
 
-  it('complain: overcooked noodles pay half price and no tip', () => {
+  it('overcooked noodles alone (D = 3): the easy first customer is only mildly bothered (ok), pays full price', () => {
     const sim = seated();
     const c = sim.customers[0];
-    cookPerfect(sim, defaultBalance.blanch.maxHoldSeconds - 0.5);
-    expect(sim.kitchen.bowl.noodles).toBe('bad');
+    cookPerfect(sim, defaultBalance.blanch.idealSeconds + 2); // D = 3, easy shifts complain-side down
     const p = sim.serve(c.table);
-    expect(p?.reaction).toBe('complain');
-    expect(p?.total).toBe(Math.round(defaultBalance.payment.price * defaultBalance.reactions.complainPriceRatio));
+    expect(p?.deviation).toBeCloseTo(3);
+    expect(p?.reaction).toBe('ok');
     expect(c.state).toBe('eating');
-    expect(sim.summary().served).toBe(1);
   });
 
-  it('generates amounts, exclusions and spoken orders by the rules', () => {
+  it('first three customers are chip tutorial orders; later orders follow the ramps', () => {
     const o = defaultBalance.orders;
-    let late = 0;
-    let spoken = 0;
-    for (let seed = 1; seed <= 40; seed++) {
+    const early = { spoken: 0, n: 0 };
+    const late = { spoken: 0, implied: 0, n: 0 };
+    const tempers = { easy: 0, normal: 0, picky: 0 };
+    for (let seed = 1; seed <= 120; seed++) {
       const sim = new DaySim({ seed });
-      // Step by hand so `sim.time` is the spawn time of each order, not the end of the day.
+      let index = 0;
       for (let t = 0; t < defaultBalance.day.lengthSeconds; t += 0.25) for (const e of sim.update(0.25)) {
         if (e.type !== 'customerArrived') continue;
-        const { order } = e.customer;
-        for (const l of [...order.toppings, ...order.garnishes]) expect([1, 2, 3]).toContain(l.portions);
+        const { order, temper } = e.customer;
+        if (index > 0) tempers[temper] += 1;
+        expect(order.tutorial).toBe(index < o.tutorialCustomers);
+        if (index < o.tutorialCustomers) expect(order.style).toBe('chips');
+        expect([1, 2, 3]).toContain(order.broth);
         const items: string[] = [...order.toppings, ...order.garnishes].map((l) => l.item);
-        if (order.exclude) expect(items).not.toContain(order.exclude);
-        if (sim.time < o.spokenFromSeconds) expect(order.spoken).toBe(false);
-        else {
-          late += 1;
-          if (order.spoken) spoken += 1;
+        if (order.avoid) expect(items).not.toContain(order.avoid.item);
+        if (order.style === 'implied') expect(order.implied).not.toBeNull();
+        index += 1;
+        if (sim.time < o.spokenFromSeconds) expect(order.style).toBe('chips');
+        else if (sim.time < 100) {
+          early.n += 1;
+          if (order.style !== 'chips') early.spoken += 1;
+        } else {
+          late.n += 1;
+          if (order.style !== 'chips') late.spoken += 1;
+          if (order.style === 'implied') late.implied += 1;
         }
       }
     }
-    expect(spoken / late).toBeGreaterThan(o.spokenChance - 0.15);
-    expect(spoken / late).toBeLessThan(o.spokenChance + 0.15);
+    expect(late.spoken / late.n).toBeGreaterThan(early.spoken / early.n);
+    expect(late.implied).toBeGreaterThan(0);
+    const total = tempers.easy + tempers.normal + tempers.picky;
+    expect(tempers.easy / total).toBeCloseTo(defaultBalance.temper.weights.easy, 1);
+    expect(tempers.picky / total).toBeCloseTo(defaultBalance.temper.weights.picky, 1);
+  });
+
+  it('spawn interval reaches spawnIntervalMidSeconds at half the day (rule 15)', () => {
+    // Plenty of tables so spawns are never held back by a full street.
+    const balance = { ...defaultBalance, day: { ...defaultBalance.day, tables: 60 } };
+    const sim = new DaySim({ seed: 5, balance });
+    const times: number[] = [];
+    for (let t = 0; t < balance.day.lengthSeconds; t += 0.05) for (const e of sim.update(0.05)) if (e.type === 'customerArrived') times.push(sim.time);
+    const half = balance.day.lengthSeconds / 2;
+    const i = times.findIndex((t) => t >= half);
+    expect(times[i + 1] - times[i]).toBeCloseTo(balance.customers.spawnIntervalMidSeconds, 0);
+    expect(times[1] - times[0]).toBeCloseTo(balance.customers.spawnIntervalStartSeconds, 0);
   });
 });
