@@ -44,8 +44,8 @@
     "hurriedFromSeconds": 60,
     "hurriedChance": 0.35,
     "patienceSeconds": {
-      "regular": 45,
-      "hurried": 28
+      "regular": 55,
+      "hurried": 35
     },
     "toppingsPerOrder": [
       {

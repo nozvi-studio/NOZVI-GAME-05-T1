@@ -82,7 +82,7 @@ All numbers live in `config/balance.json`; this table is the human-readable mirr
 | `day.lengthSeconds` | 180 | One day = 3 min |
 | `day.revenueTarget` | 250 (k VND) | Bot probe: met when a bowl takes ≤ ~18 s |
 | `customers.spawnIntervalStart/EndSeconds` | 14 → 7 | Ramps over the day |
-| `customers.patienceSeconds` | regular 45, hurried 28 | Hurried from 60 s, 35 % chance |
+| `customers.patienceSeconds` | regular 55, hurried 35 | Hurried from 60 s, 35 % chance; raised from 45 / 28 for MEC-005 (DECISIONS 2026-11-08) |
 | `customers.toppingsPerOrder` | 1–2, then 2–3 at 60 s, 3–4 at 120 s | GDD §5 ramp |
 | `payment.price` / `maxTip` | 30 / 15 (k VND) | Tip = maxTip × quality × patience left (happy / ok only) |
 | `quality.missingPenalty` / `portionPenalty` / `forbiddenPenalty` | 0.34 / 0.12 / 0.5 | MEC-005 scoring |

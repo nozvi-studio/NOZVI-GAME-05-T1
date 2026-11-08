@@ -24,7 +24,7 @@ Deferred by owner: env map (VIS-206), sound and haptics (VIS-408). Details and a
 Playtest build (private, owner shares it): https://claude.ai/artifact/FD2D6yUBwNEWZixyqQERPo (version 4 = Phase 1 + 2, commit `0bff32d`), built with `npx vite build --base=./`. Republish after each phase.
 
 ## Owner review needed
-0a. **MEC-005 implemented** (amounts, spoken orders, reactions). **Balance decision needed:** with about twice the taps per bowl, the 250 k target is out of reach at ~20 s per bowl (bot probe: 0/30 days). Options: patience 55/35 s (11/30 days at 20 s, close to the old 13/30 at 18 s), patience 60/40 s (18/30), or lower the target to ~150 k.
+0a. **MEC-005** implemented and live; patience raised to 55 / 35 s with the 250 k target kept (owner, 2026-11-08). Play a few days and say if it feels too easy or too hard.
 0. **Phone layout** (new): on a real phone, check the rotate popup (portrait) and the closer framing (landscape). Known limits: browsers cannot force landscape, so players must rotate; with the phone's auto-rotate lock on, the popup stays and the day stays paused.
 1. **Phase 2** on the playtest link: does the empty bowl read as a bowl? Are garnish and toppings readable inside the bowl on a phone? Say "ok" or point at what is wrong; Phase 3 waits for this.
 2. **Real phone check** (not possible here): do the emoji 🫀 (liver) and 🧂 (pepper) render, and is the label row readable at 844×390?
