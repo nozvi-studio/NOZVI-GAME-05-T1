@@ -14,7 +14,27 @@ const CSS = `
 .htg-bubble .row { display: flex; flex-wrap: wrap; gap: 3px; margin-bottom: 3px; }
 .htg-chip { background: #f3e2c0; border-radius: 8px; padding: 1px 6px; white-space: nowrap; }
 .htg-chip.g { background: #d9efd2; }
+.htg-chip .n { font-weight: 800; color: #7a5a3a; }
 .htg-chip.done { opacity: .6; background: #cfe9c6; }
+.htg-chip.over { opacity: 1; background: #f7c9c2; outline: 2px solid #e04848; }
+.htg-chip.no { background: #eee3dc; color: #6b3a2a; }
+.htg-bubble.spoken { min-width: min(40vw, 170px); max-width: min(46vw, 260px); }
+.htg-chip .amt { font-weight: 800; color: #8a3a1a; }
+/* Short landscape phones: three bubbles must fit side by side (MEC-005 chips are wider). */
+@media (max-height: 480px) {
+  .htg-bubble { max-width: 31vw; padding: 4px 6px 6px; }
+  .htg-bubble.spoken { min-width: 0; max-width: 31vw; }
+  .htg-chip { padding: 0 4px; }
+  .htg-chip .amt { display: none; }
+}
+.htg-bubble .say { font-style: italic; font-weight: 700; line-height: 1.25; margin-bottom: 4px; }
+.htg-say { position: absolute; transform: translate(-50%, -100%); background: #fffaf0; color: #2a1a12; border-radius: 12px; padding: 5px 10px;
+  max-width: 240px; font-weight: 800; font-size: clamp(12px, min(1.8vw, 3.6vh), 16px); text-align: center; box-shadow: 0 3px 10px rgba(0,0,0,.45);
+  border: 2px solid #9a8a70; animation: htg-say 2.8s ease-out forwards; }
+.htg-say.happy { border-color: #3fbf5a; }
+.htg-say.complain { border-color: #e8a03a; }
+.htg-say.scold { border: 3px solid #e04848; background: #fff0ee; color: #8a1f1f; }
+@keyframes htg-say { 0% { opacity: 0; margin-top: 8px; } 10%, 80% { opacity: 1; margin-top: 0; } 100% { opacity: 0; margin-top: -10px; } }
 .htg-chip.done::before { content: "✓ "; font-weight: 800; color: #2e8b3e; }
 .htg-bubble.ready { box-shadow: 0 0 0 3px #3fbf5a, 0 3px 10px rgba(0,0,0,.45); }
 .htg-bubble .tag { position: absolute; top: -10px; right: -6px; background: #8e5ad1; color: #fff; border-radius: 8px; padding: 0 6px; font-size: 11px; }

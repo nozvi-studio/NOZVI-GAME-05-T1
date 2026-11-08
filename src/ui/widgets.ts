@@ -1,5 +1,6 @@
 import type { Order } from '../core/types';
-import type { OrderProgress } from './orderProgress';
+import type { LineProgress, OrderProgress } from './orderProgress';
+import { amountWord, spokenOrder } from './speech';
 import { GARNISH_ICON, GARNISH_LABEL, STR, TOPPING_ICON, TOPPING_LABEL, clock, money } from './strings';
 
 /** Approximate bottom edge of the HUD bar, in CSS px. */
@@ -50,11 +51,26 @@ export interface BubbleData {
   progress: OrderProgress;
 }
 
+interface Chip {
+  root: HTMLSpanElement;
+  count: HTMLSpanElement;
+}
+
 interface BubbleView {
   root: HTMLDivElement;
   bar: HTMLDivElement;
-  toppingChips: HTMLSpanElement[];
-  garnishChips: HTMLSpanElement[];
+  toppingChips: Chip[];
+  garnishChips: Chip[];
+  excludeChip: HTMLSpanElement | null;
+  spoken: boolean;
+}
+
+/** MEC-005 rule 8: portions given / wanted; green when exact, red when over. */
+function showChip(chip: Chip | undefined, p: LineProgress): void {
+  if (!chip) return;
+  chip.count.textContent = ` ${p.given}/${p.wanted}`;
+  chip.root.classList.toggle('done', p.given === p.wanted);
+  chip.root.classList.toggle('over', p.given > p.wanted);
 }
 
 /** One order bubble per waiting customer, above its table (icons + labels, not colour-only). */
@@ -81,9 +97,13 @@ export class OrderBubbles {
       const p = Math.max(0, Math.min(1, b.patience));
       bubble.bar.style.width = `${p * 100}%`;
       bubble.bar.style.backgroundColor = p > 0.5 ? '#3fbf5a' : p > 0.25 ? '#e8c547' : '#e04848';
-      b.progress.toppings.forEach((done, i) => bubble.toppingChips[i]?.classList.toggle('done', done));
-      b.progress.garnishes.forEach((done, i) => bubble.garnishChips[i]?.classList.toggle('done', done));
-      bubble.root.classList.toggle('ready', b.progress.ready);
+      // Spoken orders show no progress: reading the sentence is the challenge (MEC-005 rule 8).
+      if (!bubble.spoken) {
+        b.progress.toppings.forEach((p, i) => showChip(bubble.toppingChips[i], p));
+        b.progress.garnishes.forEach((p, i) => showChip(bubble.garnishChips[i], p));
+        bubble.excludeChip?.classList.toggle('over', b.progress.excludeViolated);
+        bubble.root.classList.toggle('ready', b.progress.ready);
+      }
     }
     for (const [id, bubble] of this.bubbles) {
       if (!seen.has(id)) {
@@ -95,22 +115,33 @@ export class OrderBubbles {
 
   private create(b: BubbleData): BubbleView {
     const root = el('div', 'htg-bubble', this.root);
-    const tops = el('div', 'row', root);
-    const toppingChips = b.order.toppings.map((t) => {
-      const chip = el('span', 'htg-chip', tops);
-      chip.textContent = `${TOPPING_ICON[t]} ${TOPPING_LABEL[t]}`;
-      return chip;
-    });
-    const gars = el('div', 'row', root);
-    const garnishChips = b.order.garnishes.map((g) => {
-      const chip = el('span', 'htg-chip g', gars);
-      chip.textContent = `${GARNISH_ICON[g]} ${GARNISH_LABEL[g]}`;
-      return chip;
-    });
+    const view: BubbleView = { root, bar: root as HTMLDivElement, toppingChips: [], garnishChips: [], excludeChip: null, spoken: b.order.spoken };
+    if (b.order.spoken) {
+      root.classList.add('spoken');
+      el('div', 'say', root).textContent = `“${spokenOrder(b.order, b.id)}”`;
+    } else {
+      // The amount word sits in its own span so short phones can hide it; the "given/wanted" count still shows the amount.
+      const chip = (row: HTMLElement, cls: string, portions: number, text: string): Chip => {
+        const c = el('span', cls, row);
+        if (amountWord(portions)) el('span', 'amt', c).textContent = `${amountWord(portions)} `;
+        el('span', '', c).textContent = text;
+        return { root: c, count: el('span', 'n', c) };
+      };
+      const tops = el('div', 'row', root);
+      view.toppingChips = b.order.toppings.map((l) => chip(tops, 'htg-chip', l.portions, `${TOPPING_ICON[l.item]} ${TOPPING_LABEL[l.item]}`));
+      const gars = el('div', 'row', root);
+      view.garnishChips = b.order.garnishes.map((l) => chip(gars, 'htg-chip g', l.portions, `${GARNISH_ICON[l.item]} ${GARNISH_LABEL[l.item]}`));
+      const ex = b.order.exclude;
+      if (ex) {
+        const label = ex in TOPPING_LABEL ? TOPPING_LABEL[ex as keyof typeof TOPPING_LABEL] : GARNISH_LABEL[ex as keyof typeof GARNISH_LABEL];
+        view.excludeChip = el('span', 'htg-chip no', el('div', 'row', root));
+        view.excludeChip.textContent = `🚫 ${STR.no} ${label.toLocaleLowerCase('vi')}`;
+      }
+    }
     if (b.hurried) el('span', 'tag', root).textContent = STR.hurried;
     const track = el('div', 'htg-patience', root);
-    const bar = el('div', '', track);
-    return { root, bar, toppingChips, garnishChips };
+    view.bar = el('div', '', track);
+    return view;
   }
 }
 

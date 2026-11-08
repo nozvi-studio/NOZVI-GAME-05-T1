@@ -46,17 +46,18 @@ export class KitchenState {
     return true;
   }
 
+  // MEC-005 rule 1: one portion per tap, capped at amounts.maxPortions.
   addTopping(t: Topping): boolean {
     const bowl = this.state.bowl;
-    if (bowl.noodles === null || bowl.toppings.includes(t)) return false;
-    bowl.toppings.push(t);
+    if (bowl.noodles === null || bowl.toppings[t] >= this.balance.amounts.maxPortions) return false;
+    bowl.toppings[t] += 1;
     return true;
   }
 
   addGarnish(g: Garnish): boolean {
     const bowl = this.state.bowl;
-    if (bowl.noodles === null || bowl.garnishes.includes(g)) return false;
-    bowl.garnishes.push(g);
+    if (bowl.noodles === null || bowl.garnishes[g] >= this.balance.amounts.maxPortions) return false;
+    bowl.garnishes[g] += 1;
     return true;
   }
 

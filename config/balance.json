@@ -13,9 +13,20 @@
     "maxFill": 1.2
   },
   "quality": {
-    "gradeScore": { "perfect": 1.0, "good": 0.6, "bad": 0.2 },
-    "weights": { "noodles": 0.3, "broth": 0.2, "toppings": 0.35, "garnishes": 0.15 },
-    "mistakePenalty": 0.34,
+    "gradeScore": {
+      "perfect": 1.0,
+      "good": 0.6,
+      "bad": 0.2
+    },
+    "weights": {
+      "noodles": 0.3,
+      "broth": 0.2,
+      "toppings": 0.35,
+      "garnishes": 0.15
+    },
+    "missingPenalty": 0.34,
+    "portionPenalty": 0.12,
+    "forbiddenPenalty": 0.5,
     "perfectBowlThreshold": 0.9
   },
   "day": {
@@ -32,16 +43,53 @@
     "leaveSeconds": 2.0,
     "hurriedFromSeconds": 60,
     "hurriedChance": 0.35,
-    "patienceSeconds": { "regular": 45, "hurried": 28 },
+    "patienceSeconds": {
+      "regular": 45,
+      "hurried": 28
+    },
     "toppingsPerOrder": [
-      { "fromSeconds": 0, "min": 1, "max": 2 },
-      { "fromSeconds": 60, "min": 2, "max": 3 },
-      { "fromSeconds": 120, "min": 3, "max": 4 }
+      {
+        "fromSeconds": 0,
+        "min": 1,
+        "max": 2
+      },
+      {
+        "fromSeconds": 60,
+        "min": 2,
+        "max": 3
+      },
+      {
+        "fromSeconds": 120,
+        "min": 3,
+        "max": 4
+      }
     ],
-    "garnishesPerOrder": { "min": 1, "max": 2 }
+    "garnishesPerOrder": {
+      "min": 1,
+      "max": 2
+    }
   },
   "payment": {
     "price": 30,
     "maxTip": 15
+  },
+  "amounts": {
+    "maxPortions": 4,
+    "portionWeights": [
+      0.25,
+      0.5,
+      0.25
+    ]
+  },
+  "orders": {
+    "exclusionChance": 0.3,
+    "spokenFromSeconds": 30,
+    "spokenChance": 0.5
+  },
+  "reactions": {
+    "scoldBelow": 0.35,
+    "complainBelow": 0.6,
+    "complainPriceRatio": 0.5,
+    "scoldFine": 0
   }
 }

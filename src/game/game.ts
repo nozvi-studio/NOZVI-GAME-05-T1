@@ -4,7 +4,7 @@ import type { Bowl, GameEvent, Grade, HintTarget } from '../core/types';
 import { GARNISHES, TOPPINGS } from '../core/types';
 import { PointerInput } from '../input';
 import { COUNTER_TOP, CustomerViews, SEATED_HEAD_TOP, cameraFov, createStreetScene, type StreetScene } from '../scene';
-import { GARNISH_ICON, GARNISH_LABEL, GRADE_LABEL, OBJECT_ICON, STR, TOPPING_ICON, TOPPING_LABEL, Ui, money, orderProgress, type BubbleData, type ScreenPoint, type WorldLabel } from '../ui';
+import { GARNISH_ICON, GARNISH_LABEL, GRADE_LABEL, OBJECT_ICON, STR, TOPPING_ICON, TOPPING_LABEL, Ui, money, orderProgress, reactionLine, type BubbleData, type ScreenPoint, type WorldLabel } from '../ui';
 
 const MAX_DT = 0.1; // ARCHITECTURE §6: hidden tab must not skip the day.
 
@@ -103,12 +103,14 @@ export class Game {
   private onTap(name: string): void {
     if (this.sim.ended) return;
     const [kind, item] = name.split(':');
+    const hasNoodles = this.sim.kitchen.bowl.noodles !== null;
     if (kind === 'topping') {
       const t = TOPPINGS.find((x) => x === item);
-      if (t) this.sim.addTopping(t);
+      // MEC-005 rule 1: a rejected tap on a bowl with noodles means the portion cap was hit.
+      if (t && !this.sim.addTopping(t) && hasNoodles) this.ui.float(this.objPos(name, 0.25), STR.full, true);
     } else if (kind === 'garnish') {
       const g = GARNISHES.find((x) => x === item);
-      if (g) this.sim.addGarnish(g);
+      if (g && !this.sim.addGarnish(g) && hasNoodles) this.ui.float(this.objPos(name, 0.35), STR.full, true);
     } else if (name === 'trash') this.sim.discardBowl();
   }
 
@@ -129,9 +131,13 @@ export class Game {
 
   private onEvent(e: GameEvent): void {
     if (e.type === 'customerServed') {
-      const at = this.project(this.headPos(e.customer.table, 0.3));
-      this.ui.float(at, `+${money(e.payment.total)}`);
-      if (e.payment.perfect) this.ui.float({ x: at.x, y: at.y + 30 }, GRADE_LABEL.perfect, true);
+      const { payment: p, customer: c } = e;
+      const at = this.project(this.headPos(c.table, 0.3));
+      this.ui.float(at, `+${money(p.total)}`);
+      if (p.perfect) this.ui.float({ x: at.x, y: at.y + 30 }, GRADE_LABEL.perfect, true);
+      // MEC-005 §8: the customer says how they feel; scold names the ingredient they said "không" to.
+      const say = this.project(this.headPos(c.table, 0.45));
+      this.ui.say(say, reactionLine(p.reaction, c.id, p.forbidden ? c.order.exclude : null), p.reaction);
     } else if (e.type === 'customerGaveUp') {
       this.ui.float(this.project(this.headPos(e.customer.table, 0.3)), '😠', true);
     } else if (e.type === 'dayEnded') {

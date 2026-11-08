@@ -72,7 +72,8 @@ function buildTray(t: (typeof TOPPINGS)[number]): THREE.Group {
   const pieces = toppingPieces(t, 14, 0.19);
   pieces.position.y = 0.05;
   tray.add(pieces);
-  addHit(tray, 0.6, 0.4, 0.55, 0.15);
+  // Low hit box: a tall one projects over the tray behind it, so a tap on a back tray hit the front one (MEC-005 makes that costly).
+  addHit(tray, 0.6, 0.14, 0.55, 0.06);
   return tray;
 }
 
@@ -93,7 +94,7 @@ function buildJar(gn: (typeof GARNISHES)[number]): THREE.Group {
   rim.rotation.x = Math.PI / 2;
   rim.position.y = 0.28;
   jar.add(glass, content, top, rim);
-  addHit(jar, 0.48, 0.55, 0.45, 0.2);
+  addHit(jar, 0.48, 0.32, 0.45, 0.16); // about the jar's height, so taps on the pots behind are not stolen
   return jar;
 }
 

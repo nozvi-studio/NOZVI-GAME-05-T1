@@ -8,6 +8,8 @@ import { bowlTexture } from './textures';
 const BOWL_H = 0.22;
 const R_BOTTOM = 0.2; // wider foot: from above the empty bowl reads as a bowl, not a funnel (VIS-201)
 const R_TOP = 0.32;
+/** Piece groups kept per ingredient; matches `amounts.maxPortions` (scene must not read balance). */
+const PORTION_VIEWS = 4;
 
 /** Small low-poly pieces for one topping (also used on the counter trays). */
 export function toppingPieces(t: Topping, count: number, spread: number): THREE.Group {
@@ -104,8 +106,9 @@ export class BowlView {
   private noodles: THREE.Group;
   private noodleMat: THREE.MeshStandardMaterial;
   private broth: THREE.Mesh;
-  private toppings = new Map<Topping, THREE.Group>();
-  private garnishes = new Map<Garnish, THREE.Group>();
+  /** One piece group per portion (MEC-005: more taps, more food in the bowl). */
+  private toppings = new Map<Topping, THREE.Group[]>();
+  private garnishes = new Map<Garnish, THREE.Group[]>();
 
   constructor() {
     const shellGeo = new THREE.CylinderGeometry(R_TOP, R_BOTTOM, BOWL_H, 18, 1, true);
@@ -157,18 +160,29 @@ export class BowlView {
     this.group.add(this.noodles, this.broth);
 
     TOPPINGS.forEach((t, i) => {
-      const pieces = toppingPieces(t, 4, 0.055);
       const a = (i / TOPPINGS.length) * Math.PI * 2 + 0.4;
-      pieces.scale.setScalar(1.4); // readable at phone size (VIS-204)
-      pieces.position.set(Math.cos(a) * 0.15, 0.15, Math.sin(a) * 0.15);
-      this.toppings.set(t, pieces);
-      this.group.add(pieces);
+      const groups: THREE.Group[] = [];
+      for (let k = 0; k < PORTION_VIEWS; k++) {
+        const pieces = toppingPieces(t, 3, 0.05 + k * 0.012);
+        pieces.scale.setScalar(1.4); // readable at phone size (VIS-204)
+        pieces.rotation.y = k * 1.1;
+        pieces.position.set(Math.cos(a) * 0.15, 0.15, Math.sin(a) * 0.15);
+        pieces.userData.lift = k * 0.012;
+        groups.push(pieces);
+        this.group.add(pieces);
+      }
+      this.toppings.set(t, groups);
     });
     GARNISHES.forEach((gn) => {
-      const pieces = garnishPieces(gn, gn === 'pepper' ? 16 : 11, 0.18);
-      pieces.rotation.y = gn.length;
-      this.garnishes.set(gn, pieces);
-      this.group.add(pieces);
+      const groups: THREE.Group[] = [];
+      for (let k = 0; k < PORTION_VIEWS; k++) {
+        const pieces = garnishPieces(gn, gn === 'pepper' ? 8 : 6, 0.18);
+        pieces.rotation.y = gn.length + k * 1.3;
+        pieces.userData.lift = k * 0.006;
+        groups.push(pieces);
+        this.group.add(pieces);
+      }
+      this.garnishes.set(gn, groups);
     });
     this.set(null);
   }
@@ -190,13 +204,19 @@ export class BowlView {
       this.broth.scale.setScalar(r);
       surface = Math.max(surface, y + 0.01);
     }
-    for (const [t, g] of this.toppings) {
-      g.visible = bowl?.toppings.includes(t) ?? false;
-      g.position.y = surface;
+    for (const [t, groups] of this.toppings) {
+      const n = bowl?.toppings[t] ?? 0;
+      groups.forEach((g, k) => {
+        g.visible = k < n;
+        g.position.y = surface + (g.userData.lift as number);
+      });
     }
-    for (const [gn, g] of this.garnishes) {
-      g.visible = bowl?.garnishes.includes(gn) ?? false;
-      g.position.y = surface + 0.02;
+    for (const [gn, groups] of this.garnishes) {
+      const n = bowl?.garnishes[gn] ?? 0;
+      groups.forEach((g, k) => {
+        g.visible = k < n;
+        g.position.y = surface + 0.02 + (g.userData.lift as number);
+      });
     }
   }
 

@@ -1,9 +1,11 @@
 import { type Balance, defaultBalance } from './balance';
-import { bowlQuality, emptyBowl } from './bowl';
+import { emptyBowl, gradeBowl } from './bowl';
+import { decideReaction, isPerfect, payFor } from './reaction';
 import { KitchenState } from './kitchen';
 import { Rng } from './rng';
 import {
   GARNISHES,
+  INGREDIENTS,
   TOPPINGS,
   type Customer,
   type CustomerKind,
@@ -13,7 +15,9 @@ import {
   type Grade,
   type HintTarget,
   type Kitchen,
+  type Ingredient,
   type Order,
+  type OrderLine,
   type Payment,
   type Topping,
 } from './types';
@@ -23,7 +27,13 @@ export interface DaySimOptions {
   balance?: Balance;
 }
 
-const FIRST_ORDER: Order = { toppings: ['pork'], garnishes: ['scallion'] };
+// MEC-005 rule 6: fixed tutorial order, vừa (2 portions) of each.
+const FIRST_ORDER: Order = {
+  toppings: [{ item: 'pork', portions: 2 }],
+  garnishes: [{ item: 'scallion', portions: 2 }],
+  exclude: null,
+  spoken: false,
+};
 
 // MEC-003 / MEC-004: one selling day — customers, patience, serving, revenue.
 export class DaySim {
@@ -103,28 +113,39 @@ export class DaySim {
     this.kitchenState.discardBowl();
   }
 
-  // MEC-004: serve the current bowl to the customer at `table`.
+  // MEC-004 / MEC-005: serve the current bowl to the customer at `table`; the reaction decides the payment.
   serve(table: number): Payment | null {
     if (this.isEnded) return null;
     const bowl = this.kitchen.bowl;
     const customer = this.list.find((c) => c.table === table && c.state === 'waiting');
     if (!customer || bowl.noodles === null || this.kitchen.pouring !== null) return null;
 
-    const quality = bowlQuality(bowl, customer.order, this.balance.quality);
-    const { price, maxTip } = this.balance.payment;
-    const tip = Math.round(maxTip * quality * (customer.patience / customer.maxPatience));
+    const { quality: q, reactions: r } = this.balance;
+    const grade = gradeBowl(bowl, customer.order, q);
+    const reaction = decideReaction(bowl, grade, q, r);
+    const { price, tip } = payFor(reaction, grade.quality, customer.patience / customer.maxPatience, this.balance.payment, r);
     const payment: Payment = {
       price,
       tip,
       total: price + tip,
-      quality,
-      perfect: quality >= this.balance.quality.perfectBowlThreshold,
+      quality: grade.quality,
+      perfect: isPerfect(grade, q),
+      reaction,
+      forbidden: grade.forbidden,
     };
-    this.money += payment.total;
-    this.stats.served += 1;
-    if (payment.perfect) this.stats.perfect += 1;
-    this.setState(customer, 'eating');
-    customer.outcome = 'served';
+    const fine = reaction === 'scold' ? r.scoldFine : 0;
+    this.money = Math.max(0, this.money + payment.total - fine);
+    if (reaction === 'scold') {
+      // MEC-005 rule 12: walks off without paying, counted as lost.
+      this.setState(customer, 'leaving');
+      customer.outcome = 'angry';
+      this.stats.lost += 1;
+    } else {
+      this.setState(customer, 'eating');
+      customer.outcome = 'served';
+      this.stats.served += 1;
+      if (payment.perfect) this.stats.perfect += 1;
+    }
     this.kitchen.bowl = emptyBowl();
     this.pending.push({ type: 'customerServed', customer, payment });
     return payment;
@@ -140,9 +161,9 @@ export class DaySim {
     const k = this.kitchen;
     if (k.bowl.noodles === null) return k.basket === null ? 'basket' : 'bowl';
     const order = this.list.find((c) => c.state === 'waiting')?.order;
-    if (order && order.toppings.some((t) => !k.bowl.toppings.includes(t))) return 'toppings';
+    if (order && order.toppings.some((l) => k.bowl.toppings[l.item] < l.portions)) return 'toppings';
     if (k.bowl.broth === null) return 'pot';
-    if (order && order.garnishes.some((g) => !k.bowl.garnishes.includes(g))) return 'garnishes';
+    if (order && order.garnishes.some((l) => k.bowl.garnishes[l.item] < l.portions)) return 'garnishes';
     return 'table';
   }
 
@@ -216,13 +237,35 @@ export class DaySim {
     this.pending.push({ type: 'customerArrived', customer });
   }
 
-  // MEC-003 rule 5.
+  // MEC-005 rules 3-5 (replaces MEC-003 rule 5).
   private randomOrder(): Order {
     const cfg = this.balance.customers;
+    const o = this.balance.orders;
     const bracket = [...cfg.toppingsPerOrder].reverse().find((b) => b.fromSeconds <= this.clock) ?? cfg.toppingsPerOrder[0];
     const toppingCount = this.rng.int(bracket.min, Math.min(bracket.max, TOPPINGS.length));
     const garnishCount = this.rng.int(cfg.garnishesPerOrder.min, Math.min(cfg.garnishesPerOrder.max, GARNISHES.length));
-    return { toppings: this.rng.sample(TOPPINGS, toppingCount), garnishes: this.rng.sample(GARNISHES, garnishCount) };
+    const toppings = this.rng.sample(TOPPINGS, toppingCount).map((item) => this.line(item));
+    const garnishes = this.rng.sample(GARNISHES, garnishCount).map((item) => this.line(item));
+    const used = new Set<Ingredient>([...toppings, ...garnishes].map((l) => l.item));
+    const free = INGREDIENTS.filter((i) => !used.has(i));
+    const exclude = free.length > 0 && this.rng.next() < o.exclusionChance ? this.rng.pick(free) : null;
+    const spoken = this.clock >= o.spokenFromSeconds && this.rng.next() < o.spokenChance;
+    return { toppings, garnishes, exclude, spoken };
+  }
+
+  /** Amount for one ordered ingredient: ít 1 / vừa 2 / nhiều 3, drawn with `amounts.portionWeights`. */
+  private line<T extends Ingredient>(item: T): OrderLine<T> {
+    const weights = this.balance.amounts.portionWeights;
+    let roll = this.rng.next() * weights.reduce((a, b) => a + b, 0);
+    let portions = weights.length;
+    for (let i = 0; i < weights.length; i++) {
+      roll -= weights[i];
+      if (roll < 0) {
+        portions = i + 1;
+        break;
+      }
+    }
+    return { item, portions };
   }
 
   private endDay(): void {

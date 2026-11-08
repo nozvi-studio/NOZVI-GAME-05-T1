@@ -9,9 +9,22 @@ export type Topping = (typeof TOPPINGS)[number];
 export const GARNISHES = ['scallion', 'pepper', 'sprouts'] as const;
 export type Garnish = (typeof GARNISHES)[number];
 
+export type Ingredient = Topping | Garnish;
+export const INGREDIENTS: readonly Ingredient[] = [...TOPPINGS, ...GARNISHES];
+
+/** MEC-005: portions asked for one ingredient (ít 1, vừa 2, nhiều 3). */
+export interface OrderLine<T extends Ingredient> {
+  item: T;
+  portions: number;
+}
+
 export interface Order {
-  toppings: Topping[];
-  garnishes: Garnish[];
+  toppings: OrderLine<Topping>[];
+  garnishes: OrderLine<Garnish>[];
+  /** "không X": an ingredient the customer explicitly does not want (MEC-005 rule 4). */
+  exclude: Ingredient | null;
+  /** Shown as one spoken sentence instead of chips (MEC-005 rule 5). */
+  spoken: boolean;
 }
 
 export type CustomerKind = 'regular' | 'hurried';
@@ -35,10 +48,15 @@ export interface Customer {
 
 export interface Bowl {
   noodles: Grade | null;
-  toppings: Topping[];
+  /** Portions per topping (MEC-005 rule 1). */
+  toppings: Record<Topping, number>;
   broth: { fill: number; grade: Grade } | null;
-  garnishes: Garnish[];
+  /** Portions per garnish. */
+  garnishes: Record<Garnish, number>;
 }
+
+/** MEC-005 rules 12-14: how the customer reacts to the served bowl. */
+export type Reaction = 'happy' | 'ok' | 'complain' | 'scold';
 
 export interface Kitchen {
   /** Graded noodles sitting in the basket, waiting to go into the bowl. */
@@ -51,12 +69,16 @@ export interface Kitchen {
 }
 
 export interface Payment {
+  /** Price actually paid (0 on scold, part of the price on complain). */
   price: number;
   tip: number;
   total: number;
   /** 0..1 */
   quality: number;
   perfect: boolean;
+  reaction: Reaction;
+  /** An excluded ingredient was in the bowl. */
+  forbidden: boolean;
 }
 
 export interface DaySummary {

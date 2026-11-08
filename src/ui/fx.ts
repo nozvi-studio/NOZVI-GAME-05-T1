@@ -13,6 +13,16 @@ export function floatText(root: HTMLElement, at: ScreenPoint, text: string, smal
   setTimeout(() => e.remove(), 2000);
 }
 
+/** Customer's spoken reaction above their head (MEC-005 §8). `tone` styles the border. */
+export function sayText(root: HTMLElement, at: ScreenPoint, text: string, tone: string): void {
+  const e = el('div', `htg-say ${tone}`, root);
+  e.textContent = text;
+  e.style.left = `${at.x}px`;
+  e.style.top = `${at.y}px`;
+  e.addEventListener('animationend', () => e.remove());
+  setTimeout(() => e.remove(), 4000);
+}
+
 /** Pulsing ring + hand on the next FTUE target (GDD §3b). */
 export class HintRing {
   private e: HTMLDivElement;

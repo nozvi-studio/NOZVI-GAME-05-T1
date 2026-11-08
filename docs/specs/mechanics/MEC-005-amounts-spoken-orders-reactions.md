@@ -3,7 +3,7 @@ id: MEC-005
 type: mechanic
 status: approved
 owner: game-design
-version: 0.2
+version: 0.3
 parent: GDD
 related: [MEC-002, MEC-003, MEC-004]
 studio_standard: 0.1
@@ -44,7 +44,7 @@ Tap on `topping:*` / `garnish:*` (portion); customer spawn (order generation); s
 7. Same seed → same orders, amounts, exclusions and spoken/chip choice (deterministic RNG).
 
 **Display**
-8. Chip orders show the amount word on the chip ("Nhiều 🌿 Hành", "Ít 🥩 Thịt bằm", "🚫 Tiêu") and the progress as portions given / wanted. Spoken orders show only the sentence: no chips and no progress marks (reading it is the challenge).
+8. Chip orders show the amount word on the chip ("Nhiều 🌿 Hành", "Ít 🥩 Thịt bằm", "🚫 Tiêu") and the progress as portions given / wanted (green when exact, red when over). On screens under 480 px high the amount word is hidden so three bubbles fit; the count still shows the amount. Spoken orders show only the sentence: no chips and no progress marks (reading it is the challenge).
 
 **Grading (replaces MEC-002 rules 6 and 7)**
 9. For toppings and for garnishes separately, set score = max(0, 1 − Σ penalties) over every ingredient, with wanted `w` and given `g` portions:

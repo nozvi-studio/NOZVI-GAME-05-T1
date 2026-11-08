@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { bowlQuality, defaultBalance, gradeBroth, setScore } from '../src/core';
+import { bowlQuality, decideReaction, defaultBalance, emptyBowl, gradeBowl, gradeBroth, partScore, payFor, type Bowl, type Order } from '../src/core';
 import { KitchenState } from '../src/core/kitchen';
 
 const q = defaultBalance.quality;
@@ -37,17 +37,25 @@ describe('MEC-002 bowl assembly', () => {
     expect(k.state.bowl.noodles).toBe('perfect');
   });
 
-  it('rejects toppings, garnish and broth before noodles; ignores duplicates', () => {
+  it('rejects toppings, garnish and broth before noodles', () => {
     const k = new KitchenState(defaultBalance);
     expect(k.addTopping('pork')).toBe(false);
     expect(k.addGarnish('scallion')).toBe(false);
     expect(k.startPour()).toBe(false);
+  });
+
+  // MEC-005 rule 1: each tap adds one portion, capped at maxPortions.
+  it('adds one portion per tap up to maxPortions', () => {
+    const k = new KitchenState(defaultBalance);
     k.startBlanch();
     k.releaseBlanch();
     k.moveNoodlesToBowl();
+    const max = defaultBalance.amounts.maxPortions;
+    for (let i = 0; i < max; i++) expect(k.addGarnish('scallion')).toBe(true);
+    expect(k.addGarnish('scallion')).toBe(false);
+    expect(k.state.bowl.garnishes.scallion).toBe(max);
     expect(k.addTopping('pork')).toBe(true);
-    expect(k.addTopping('pork')).toBe(false);
-    expect(k.state.bowl.toppings).toEqual(['pork']);
+    expect(k.state.bowl.toppings.pork).toBe(1);
   });
 
   it('pours broth once and grades the fill', () => {
@@ -89,16 +97,109 @@ describe('MEC-002 bowl assembly', () => {
     expect(gradeBroth(0.4, defaultBalance.broth)).toBe('bad');
   });
 
-  it('scores sets with missing and extra items', () => {
-    expect(setScore(['pork', 'shrimp'], ['pork'], 0.34)).toBeCloseTo(0.66);
-    expect(setScore(['pork'], ['pork', 'liver'], 0.34)).toBeCloseTo(0.66);
-    expect(setScore(['pork'], ['shrimp', 'liver', 'quailEgg'], 0.34)).toBe(0);
+});
+
+// MEC-005 rules 9-15.
+const order = (over: Partial<Order> = {}): Order => ({
+  toppings: [{ item: 'pork', portions: 2 }],
+  garnishes: [{ item: 'scallion', portions: 3 }],
+  exclude: null,
+  spoken: false,
+  ...over,
+});
+
+/** A bowl that matches `order()` exactly, with perfect cooking. */
+const goodBowl = (): Bowl => {
+  const b = emptyBowl();
+  b.noodles = 'perfect';
+  b.broth = { fill: 0.8, grade: 'perfect' };
+  b.toppings.pork = 2;
+  b.garnishes.scallion = 3;
+  return b;
+};
+
+describe('MEC-005 scoring', () => {
+  it('a missing or extra ingredient costs missingPenalty', () => {
+    const given = { ...emptyBowl().toppings };
+    expect(partScore(['pork', 'shrimp'], [{ item: 'pork', portions: 1 }], given, null, q).score).toBeCloseTo(0.66);
+    given.pork = 1;
+    given.liver = 2;
+    const extra = partScore(['pork', 'liver'], [{ item: 'pork', portions: 1 }], given, null, q);
+    expect(extra.score).toBeCloseTo(0.66);
+    expect(extra.mistakes).toBe(1);
+    expect(extra.forbidden).toBe(false);
   });
 
-  it('quality is 1 for a perfect matching bowl', () => {
-    const order = { toppings: ['pork' as const], garnishes: ['scallion' as const] };
-    const bowl = { noodles: 'perfect' as const, toppings: ['pork' as const], broth: { fill: 0.8, grade: 'perfect' as const }, garnishes: ['scallion' as const] };
-    expect(bowlQuality(bowl, order, q)).toBe(1);
-    expect(bowlQuality({ ...bowl, broth: null }, order, q)).toBeCloseTo(0.8);
+  it('a wrong amount costs portionPenalty per portion', () => {
+    const b = goodBowl();
+    b.toppings.pork = 3; // vừa ordered, nhiều given
+    const g = gradeBowl(b, order(), q);
+    expect(partScore(['pork'], order().toppings, b.toppings, null, q).score).toBeCloseTo(1 - q.portionPenalty);
+    expect(g.mistakes).toBe(1);
+  });
+
+  it('adding an excluded ingredient marks the bowl forbidden', () => {
+    const b = goodBowl();
+    b.garnishes.pepper = 1;
+    const g = gradeBowl(b, order({ exclude: 'pepper' }), q);
+    expect(g.forbidden).toBe(true);
+    expect(partScore(['scallion', 'pepper'], order().garnishes, b.garnishes, 'pepper', q).score).toBeCloseTo(1 - q.forbiddenPenalty);
+  });
+
+  it('quality is 1 for an exact bowl and drops without broth', () => {
+    expect(bowlQuality(goodBowl(), order(), q)).toBe(1);
+    expect(bowlQuality({ ...goodBowl(), broth: null }, order(), q)).toBeCloseTo(0.8);
+  });
+});
+
+describe('MEC-005 reactions and payment', () => {
+  const r = defaultBalance.reactions;
+  const pay = defaultBalance.payment;
+  const react = (b: Bowl, o = order()) => decideReaction(b, gradeBowl(b, o, q), q, r);
+
+  it('an exact, well cooked bowl makes the customer happy and pays price + tip', () => {
+    expect(react(goodBowl())).toBe('happy');
+    expect(payFor('happy', 1, 1, pay, r)).toEqual({ price: pay.price, tip: pay.maxTip });
+  });
+
+  it('one portion off is still paid but not perfect (ok)', () => {
+    const b = goodBowl();
+    b.garnishes.scallion = 2;
+    expect(react(b)).toBe('ok');
+  });
+
+  it('bad noodles with good broth: the customer complains and pays half, no tip', () => {
+    const b = goodBowl();
+    b.noodles = 'bad';
+    b.broth = { fill: 0.9, grade: 'good' };
+    expect(react(b)).toBe('complain');
+    expect(payFor('complain', 0.7, 1, pay, r)).toEqual({ price: Math.round(pay.price * r.complainPriceRatio), tip: 0 });
+  });
+
+  it('bad noodles and bad broth: the customer scolds and pays nothing', () => {
+    const b = goodBowl();
+    b.noodles = 'bad';
+    b.broth = { fill: 1.2, grade: 'bad' };
+    expect(react(b)).toBe('scold');
+    expect(payFor('scold', 0.6, 1, pay, r)).toEqual({ price: 0, tip: 0 });
+  });
+
+  it('an excluded ingredient makes the customer scold even if the rest is perfect', () => {
+    const b = goodBowl();
+    b.garnishes.pepper = 1;
+    expect(react(b, order({ exclude: 'pepper' }))).toBe('scold');
+  });
+
+  it('very low quality scolds', () => {
+    const b = goodBowl();
+    b.toppings.pork = 0;
+    b.toppings.shrimp = 2;
+    b.toppings.liver = 2;
+    b.garnishes.scallion = 0;
+    b.garnishes.pepper = 2;
+    b.noodles = 'good';
+    b.broth = null;
+    expect(gradeBowl(b, order(), q).quality).toBeLessThan(defaultBalance.reactions.scoldBelow);
+    expect(react(b)).toBe('scold');
   });
 });

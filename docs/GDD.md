@@ -26,9 +26,9 @@ Cooking steps (each one short interaction):
 |---|---|---|
 | Blanch noodles | Hold, release in the green zone | Timing (MEC-001) |
 | Put in bowl | Drag basket to bowl | Done / not done |
-| Toppings (pork, shrimp, liver, quail egg) | Tap toppings listed on the order | Correct set |
+| Toppings (pork, shrimp, liver, quail egg) | Tap once per portion (ít 1 / vừa 2 / nhiều 3) | Correct items and amounts (MEC-005) |
 | Ladle broth (broth orders) | Hold to pour, release at the line | Amount |
-| Garnish | Tap scallion / pepper / bean sprouts | Correct set |
+| Garnish | Tap scallion / pepper / bean sprouts, once per portion | Correct items and amounts; "không X" respected (MEC-005) |
 | Serve | Drag bowl to the ordering table | Right table, speed |
 
 ## 2b. Mechanics index [REQUIRED once a 2nd mechanic exists]
@@ -84,7 +84,11 @@ All numbers live in `config/balance.json`; this table is the human-readable mirr
 | `customers.spawnIntervalStart/EndSeconds` | 14 → 7 | Ramps over the day |
 | `customers.patienceSeconds` | regular 45, hurried 28 | Hurried from 60 s, 35 % chance |
 | `customers.toppingsPerOrder` | 1–2, then 2–3 at 60 s, 3–4 at 120 s | GDD §5 ramp |
-| `payment.price` / `maxTip` | 30 / 15 (k VND) | Tip = maxTip × quality × patience left |
+| `payment.price` / `maxTip` | 30 / 15 (k VND) | Tip = maxTip × quality × patience left (happy / ok only) |
+| `quality.missingPenalty` / `portionPenalty` / `forbiddenPenalty` | 0.34 / 0.12 / 0.5 | MEC-005 scoring |
+| `amounts.maxPortions` / `portionWeights` | 4 / ít 0.25, vừa 0.5, nhiều 0.25 | MEC-005 |
+| `orders.exclusionChance` / `spokenFromSeconds` / `spokenChance` | 0.3 / 30 / 0.5 | MEC-005 |
+| `reactions.scoldBelow` / `complainBelow` / `complainPriceRatio` / `scoldFine` | 0.35 / 0.6 / 0.5 / 0 | MEC-005 |
 
 ## 8. Progression & meta [M3]
 - Short-term (per run): revenue, tips, perfect-bowl streak.

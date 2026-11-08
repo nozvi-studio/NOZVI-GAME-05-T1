@@ -13,12 +13,14 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: Se
 - Visual polish Phase 2 (presentation only): the empty bowl reads as a white glazed bowl (wider foot, bright inner glaze, blue inner band); garnish pieces and in-bowl toppings enlarged for phone viewports; counter bowl scaled 1.15×.
 - GitHub Pages deploy workflow (`.github/workflows/deploy.yml`): `npm ci`, tests, typecheck, build with `--base=./`, then publish `dist/` to the `gh-pages` branch on pushes to master or manual run.
 - Phone layout: a "rotate your phone" popup for touch phones held upright (the day pauses until they rotate), and a slightly closer camera on phones in landscape (FOV 46 → 41). Tablets are not targeted yet. `shouldAskRotate` and `cameraFov` have unit tests.
+- MEC-005 gameplay: tap an ingredient once per portion (ít 1 / vừa 2 / nhiều 3, cap 4); orders may say "không X"; about half of the orders after 30 s are spoken sentences instead of chips; customers react happy / ok / complain (half price, no tip) / scold (pays nothing, counts as lost) with playful Vietnamese lines; chips show portions given / wanted and turn red when over. New `reaction.ts`, `speech.ts` and tests.
 ### Changed
 - Phase 1: bubbles and floating text anchor to the seated head instead of a standing height; floor grout softened, tiles enlarged and the floor dimmed; counter darkened and matte with dark tray liners; trash can scaled down and toned (hit box unchanged); clearer icons for liver and pepper.
 - Red awning removed (it hid seated customers); replaced by a slim pipe with a shaded bulb.
 - `AGENTS.md`, `README.md`, `docs/README.md` point agents to `docs/standards/` as binding rules.
 - Camera moved closer and tables pulled toward the cart so tap targets stay usable on landscape phones; HUD text scales with viewport height.
 ### Fixed
+- Tray and garnish-jar hit boxes were taller than the objects, so a tap on a back topping tray landed on the front tray; they now match the object height.
 - Deploy: Pages served the unbuilt `index.html` (black screen, 404 for `/src/main.ts`); the workflow now publishes the built `dist/` to `gh-pages`.
 ### Removed
 
