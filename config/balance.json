@@ -37,7 +37,7 @@
       "dislike": 0.7,
       "allergy": 0.3
     },
-    "spokenFromSeconds": 30,
+    "spokenFromSeconds": 50,
     "spokenChanceStart": 0.3,
     "spokenChanceEnd": 0.8,
     "impliedShareStart": 0.1,
@@ -77,9 +77,10 @@
     "scoldPayRatio": 0.3
   },
   "day": {
-    "lengthSeconds": 180,
-    "revenueTarget": 250,
-    "tables": 3
+    "lengthSeconds": 300,
+    "revenueTarget": 350,
+    "tables": 3,
+    "freezeUntilFirstServed": true
   },
   "customers": {
     "firstSpawnSeconds": 1.0,
@@ -88,7 +89,7 @@
     "arriveSeconds": 2.0,
     "eatSeconds": 6.0,
     "leaveSeconds": 2.0,
-    "hurriedFromSeconds": 60,
+    "hurriedFromSeconds": 100,
     "hurriedChance": 0.35,
     "patienceSeconds": {
       "regular": 55,
@@ -101,12 +102,12 @@
         "max": 2
       },
       {
-        "fromSeconds": 60,
+        "fromSeconds": 100,
         "min": 2,
         "max": 3
       },
       {
-        "fromSeconds": 120,
+        "fromSeconds": 200,
         "min": 3,
         "max": 4
       }

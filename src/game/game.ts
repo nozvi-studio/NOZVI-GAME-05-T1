@@ -4,7 +4,7 @@ import type { Bowl, GameEvent, Grade, HintTarget } from '../core/types';
 import { GARNISHES, TOPPINGS } from '../core/types';
 import { PointerInput } from '../input';
 import { COUNTER_TOP, CustomerViews, SEATED_HEAD_TOP, cameraFov, createStreetScene, type StreetScene } from '../scene';
-import { GARNISH_LABEL, GRADE_LABEL, STR, TOPPING_LABEL, Ui, brothWord, leaveLine, money, orderProgress, reactionLine, type BubbleData, type ScreenPoint, type WorldLabel } from '../ui';
+import { GARNISH_LABEL, GRADE_LABEL, STR, TIPS, TOPPING_LABEL, Ui, brothWord, leaveLine, money, orderProgress, reactionLine, tutorialCaption, type BubbleData, type ScreenPoint, type WorldLabel } from '../ui';
 
 const MAX_DT = 0.1; // ARCHITECTURE §6: hidden tab must not skip the day.
 
@@ -22,6 +22,9 @@ export class Game {
   private height = 1;
   private prevBasket: Grade | null = null;
   private prevBroth = false;
+  /** MEC-007 rule 6: one-time tips already shown this day, and tutorial customers finished. */
+  private tips = new Set<keyof typeof TIPS>();
+  private tutorialDoneCount = 0;
   private tmp = new THREE.Vector3();
 
   constructor(
@@ -64,6 +67,8 @@ export class Game {
     this.ui.reset();
     this.prevBasket = null;
     this.prevBroth = false;
+    this.tips.clear();
+    this.tutorialDoneCount = 0;
   }
 
   frame(dt: number): void {
@@ -130,8 +135,14 @@ export class Game {
   // ---- sim → views / UI ----
 
   private onEvent(e: GameEvent): void {
-    if (e.type === 'customerServed') {
+    if (e.type === 'customerArrived') {
+      const st = e.customer.order.style;
+      if (st !== 'chips') this.tip('firstSpoken');
+      if (st === 'implied') this.tip('firstImplied');
+    } else if (e.type === 'customerServed') {
       const { payment: p, customer: c } = e;
+      if (c.id === 1) this.tip('clockStarts');
+      if (c.order.tutorial) this.tutorialFinished();
       const at = this.project(this.headPos(c.table, 0.3));
       this.ui.float(at, `+${money(p.total)}`);
       if (p.perfect) this.ui.float({ x: at.x, y: at.y + 30 }, GRADE_LABEL.perfect, true);
@@ -139,12 +150,25 @@ export class Game {
       const say = this.project(this.headPos(c.table, 0.45));
       this.ui.say(say, reactionLine(p.reaction, p.cause, c.temper, c.id), p.reaction);
     } else if (e.type === 'customerGaveUp') {
+      if (e.customer.order.tutorial) this.tutorialFinished();
       // MEC-006 rule 14: a line, then they walk off.
       this.ui.say(this.project(this.headPos(e.customer.table, 0.45)), leaveLine(e.customer.temper, e.customer.id), 'leave');
     } else if (e.type === 'dayEnded') {
       this.input.cancel();
       this.ui.showSummary(e.summary);
     }
+  }
+
+  /** Shows a one-time tip once per day. */
+  private tip(key: keyof typeof TIPS): void {
+    if (this.tips.has(key)) return;
+    this.tips.add(key);
+    this.ui.toast(TIPS[key]);
+  }
+
+  private tutorialFinished(): void {
+    this.tutorialDoneCount += 1;
+    if (this.tutorialDoneCount === this.sim.balance.orders.tutorialCustomers) this.tip('tutorialDone');
   }
 
   private syncScene(): void {
@@ -166,7 +190,7 @@ export class Game {
   private syncUi(): void {
     const sim = this.sim;
     const b = sim.balance;
-    this.ui.hud.set(sim.revenue, b.day.revenueTarget, b.day.lengthSeconds - sim.time);
+    this.ui.hud.set(sim.revenue, b.day.revenueTarget, b.day.lengthSeconds - sim.time, sim.frozen);
 
     const bubbles: BubbleData[] = [];
     for (const c of sim.customers) {
@@ -210,6 +234,12 @@ export class Game {
     const hint = !sim.ended && sim.summary().served === 0 ? this.hintPos(sim.nextHint()) : null;
     if (hint && !this.input.dragging) this.ui.hint.show(hint);
     else this.ui.hint.hide();
+
+    // MEC-007 rules 4-5: captions for the three tutorial customers; anchored to the ring for the first.
+    const tutorialOrder = sim.customers.find((c) => c.state === 'waiting' && c.order.tutorial)?.order ?? null;
+    const caption = sim.ended ? null : tutorialCaption({ frozen: sim.frozen, hint: sim.nextHint(), tutorialOrder });
+    if (caption) this.ui.tutorial.show(caption, sim.frozen && hint ? hint : null);
+    else this.ui.tutorial.hide();
 
     this.ui.labels.update(this.labels());
   }

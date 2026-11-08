@@ -75,14 +75,25 @@ export class DaySim {
     return this.isEnded;
   }
 
+  /**
+   * MEC-007 rule 2: while the first customer is arriving or waiting, the day clock, spawning and that
+   * customer's patience stand still (cooking holds still run), so the tutorial bowl costs no time.
+   */
+  get frozen(): boolean {
+    if (!this.balance.day.freezeUntilFirstServed) return false;
+    const first = this.list.find((c) => c.id === 1);
+    return first !== undefined && (first.state === 'arriving' || first.state === 'waiting');
+  }
+
   update(dt: number): GameEvent[] {
     if (!this.isEnded && dt > 0) {
       const day = this.balance.day.lengthSeconds;
-      const step = Math.min(dt, day - this.clock);
-      this.clock += step;
+      const frozen = this.frozen;
+      const step = frozen ? dt : Math.min(dt, day - this.clock);
+      if (!frozen) this.clock += step;
       this.kitchenState.update(step);
-      this.updateCustomers(step);
-      this.updateSpawning(step);
+      this.updateCustomers(step, frozen);
+      if (!frozen) this.updateSpawning(step);
       if (this.clock >= day) this.endDay();
     }
     const events = this.pending;
@@ -174,7 +185,7 @@ export class DaySim {
     c.stateTime = 0;
   }
 
-  private updateCustomers(dt: number): void {
+  private updateCustomers(dt: number, frozen = false): void {
     const cfg = this.balance.customers;
     for (const c of [...this.list]) {
       c.stateTime += dt;
@@ -182,7 +193,7 @@ export class DaySim {
         this.setState(c, 'waiting');
         this.pending.push({ type: 'customerSeated', customer: c });
       } else if (c.state === 'waiting') {
-        c.patience = Math.max(0, c.patience - dt);
+        if (!frozen) c.patience = Math.max(0, c.patience - dt);
         if (c.patience <= 0) {
           this.setState(c, 'leaving');
           c.outcome = 'angry';

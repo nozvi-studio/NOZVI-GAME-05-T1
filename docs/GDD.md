@@ -40,14 +40,15 @@ Cooking steps (each one short interaction):
 | MEC-004 | Serve to table | Deliver to the correct customer | `docs/specs/mechanics/MEC-004-serve-payment.md` | Approved |
 | MEC-005 | Amounts, spoken orders, reactions | Read orders carefully; bad or wrong bowls cost money and anger customers | `docs/specs/mechanics/MEC-005-amounts-spoken-orders-reactions.md` | Approved |
 | MEC-006 | Deviation, temperament, implied orders | The further from what the customer wanted, the harsher they react | `docs/specs/mechanics/MEC-006-deviation-temperament-implied-orders.md` | Approved |
+| MEC-007 | Day length & tutorial | 5-minute day; untimed, captioned first bowl | `docs/specs/mechanics/MEC-007-day-length-tutorial.md` | Approved |
 
 ## 3. Controls & input [REQUIRED]
 - Input scheme: mouse or touch only — tap, hold, drag. Landscape. Fixed camera, tilted top-down from behind the cart.
-- Launch to first input: **≤ 5 s**. No tutorial text walls; the first customer's order is the tutorial.
+- Launch to first input: **≤ 5 s**. No text walls: the first three customers are the tutorial, with one-line captions (MEC-007).
 
 ## 3b. First-time user experience (first 60 s) [REQUIRED]
 - Second 0–5: the cart at night, one customer walks up and sits; a speech bubble shows one bowl. A pulsing hand points at the noodle basket.
-- How the core verb is taught: each step highlights the next object to touch; no text beyond one-word labels.
+- How the core verb is taught: each step highlights the next object and a one-line caption names it; the first customer is not timed (MEC-007).
 - First success moment: first bowl served at ~20 s (overrides the 15 s default; see DECISIONS).
 - First failure and retry: a later customer leaves if patience runs out; the table frees and the next customer arrives — no game over mid-day.
 - Hidden until later: upgrades, money totals screen, settings.
@@ -55,7 +56,7 @@ Cooking steps (each one short interaction):
 ## 4. Win / lose & session [REQUIRED]
 - **Fail condition:** day ends with revenue below the day target.
 - **Win / level-complete condition:** reach the day revenue target before the day timer ends.
-- **Target session length:** one day = 3 minutes; 3–5 min per sitting.
+- **Target session length:** one day = 5 minutes (MEC-007); 5–10 min per sitting.
 - **Restart cost:** ≤ 1 tap, ≤ 1 s ("Bán lại / Play again").
 
 ## 5. Difficulty & pacing [REQUIRED]
@@ -80,11 +81,11 @@ All numbers live in `config/balance.json`; this table is the human-readable mirr
 | `broth.fillPerSecond` / `targetFill` | 0.5 / 0.8 | Hold ≈ 1.6 s for a perfect pour |
 | `broth.perfectTolerance` / `goodTolerance` | 0.06 / 0.15 | Fill bands |
 | `quality.weights` | noodles 0.3, broth 0.2, toppings 0.35, garnish 0.15 | MEC-002 |
-| `day.lengthSeconds` | 180 | One day = 3 min |
-| `day.revenueTarget` | 250 (k VND) | Bot probe: met when a bowl takes ≤ ~18 s |
+| `day.lengthSeconds` | 300 | One day = 5 min (MEC-007); first customer untimed |
+| `day.revenueTarget` | 350 (k VND) | Keeps MEC-006 difficulty on the 5-min day (MEC-007 bot probe) |
 | `customers.spawnIntervalStart/Mid/EndSeconds` | 14 → 9.5 (half day) → 7 | Faster by mid-day (MEC-006) |
-| `customers.patienceSeconds` | regular 55, hurried 35 | Hurried from 60 s, 35 % chance; raised from 45 / 28 for MEC-005 (DECISIONS 2026-11-08) |
-| `customers.toppingsPerOrder` | 1–2, then 2–3 at 60 s, 3–4 at 120 s | GDD §5 ramp |
+| `customers.patienceSeconds` | regular 55, hurried 35 | Hurried from 100 s, 35 % chance; raised from 45 / 28 for MEC-005 (DECISIONS 2026-11-08) |
+| `customers.toppingsPerOrder` | 1–2, then 2–3 at 100 s, 3–4 at 200 s | GDD §5 ramp |
 | `payment.price` / `maxTip` | 30 / 15 (k VND) | Tip = maxTip × quality × patience left (happy / ok only) |
 | `amounts.maxPortions` / `portionWeights` | 4 / ít 0.25, vừa 0.5, nhiều 0.25 | MEC-005 |
 | `broth.levelFill` | ít 0.55 / vừa 0.8 / nhiều 1.05 | MEC-006 broth levels |

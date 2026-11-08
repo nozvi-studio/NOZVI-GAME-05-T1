@@ -23,6 +23,46 @@ export function sayText(root: HTMLElement, at: ScreenPoint, text: string, tone: 
   setTimeout(() => e.remove(), 4000);
 }
 
+/** MEC-007: one-line tutorial caption, next to the hint ring when `at` is given, else top centre. */
+export class TutorialBar {
+  private e: HTMLDivElement;
+  private last = '';
+
+  constructor(root: HTMLElement) {
+    this.e = el('div', 'htg-tut', root);
+    this.hide();
+  }
+
+  show(text: string, at: ScreenPoint | null): void {
+    if (text !== this.last) {
+      this.e.textContent = text;
+      this.last = text;
+    }
+    this.e.style.display = 'block';
+    this.e.classList.toggle('anchored', at !== null);
+    if (at) {
+      const halfW = this.e.offsetWidth / 2 + 8;
+      this.e.style.left = `${Math.min(window.innerWidth - halfW, Math.max(halfW, at.x))}px`;
+      this.e.style.top = `${Math.max(this.e.offsetHeight + 56, at.y - 40)}px`;
+    } else {
+      this.e.style.left = '50%';
+      this.e.style.top = '';
+    }
+  }
+
+  hide(): void {
+    this.e.style.display = 'none';
+  }
+}
+
+/** Big centred one-time tip that fades out (MEC-007 rule 6). */
+export function toast(root: HTMLElement, text: string): void {
+  const e = el('div', 'htg-toast', root);
+  e.textContent = text;
+  e.addEventListener('animationend', () => e.remove());
+  setTimeout(() => e.remove(), 6000);
+}
+
 /** Pulsing ring + hand on the next FTUE target (GDD §3b). */
 export class HintRing {
   private e: HTMLDivElement;

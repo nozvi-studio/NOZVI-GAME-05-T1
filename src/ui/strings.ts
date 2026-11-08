@@ -19,6 +19,7 @@ export const STR = {
   trash: 'Bỏ',
   no: 'Không',
   full: 'Tối đa!',
+  notTimed: 'Chưa tính giờ',
   brothLevels: ['ít', 'vừa', 'nhiều'],
   rotateTitle: 'Xoay ngang điện thoại để chơi',
   rotateSub: 'Game tạm dừng cho đến khi bạn xoay ngang',

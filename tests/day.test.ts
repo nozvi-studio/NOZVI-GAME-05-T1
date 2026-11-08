@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { DaySim, defaultBalance, type GameEvent } from '../src/core';
 
 const cfg = defaultBalance.customers;
+/** Same rules without the first-customer freeze, for tests that let a day run unattended. */
+const noFreeze = { ...defaultBalance, day: { ...defaultBalance.day, freezeUntilFirstServed: false } };
 
 function run(sim: DaySim, seconds: number, step = 0.1): GameEvent[] {
   const events: GameEvent[] = [];
@@ -48,7 +50,7 @@ describe('MEC-003 customers & day', () => {
   });
 
   it('a regular customer gives up after their patience runs out', () => {
-    const sim = new DaySim({ seed: 1 });
+    const sim = new DaySim({ seed: 1, balance: noFreeze });
     run(sim, cfg.firstSpawnSeconds + cfg.arriveSeconds + 0.3);
     const first = sim.customers[0];
     const events = run(sim, cfg.patienceSeconds.regular + 0.2);
@@ -57,7 +59,7 @@ describe('MEC-003 customers & day', () => {
   });
 
   it('never seats more customers than tables', () => {
-    const sim = new DaySim({ seed: 7 });
+    const sim = new DaySim({ seed: 7, balance: noFreeze });
     for (let i = 0; i < 1000; i++) {
       sim.update(0.1);
       const tables = sim.customers.map((c) => c.table);
@@ -68,7 +70,7 @@ describe('MEC-003 customers & day', () => {
 
   it('is deterministic for the same seed', () => {
     const orders = (seed: number) => {
-      const sim = new DaySim({ seed });
+      const sim = new DaySim({ seed, balance: noFreeze });
       return run(sim, 120)
         .filter((e) => e.type === 'customerArrived')
         .map((e) => (e.type === 'customerArrived' ? [e.customer.table, e.customer.kind, e.customer.order] : null));
@@ -77,7 +79,7 @@ describe('MEC-003 customers & day', () => {
   });
 
   it('ends the day once with a summary and then freezes', () => {
-    const sim = new DaySim({ seed: 3 });
+    const sim = new DaySim({ seed: 3, balance: noFreeze });
     const events = run(sim, defaultBalance.day.lengthSeconds + 5);
     expect(events.filter((e) => e.type === 'dayEnded')).toHaveLength(1);
     expect(sim.ended).toBe(true);
@@ -192,7 +194,7 @@ describe('MEC-006 orders and reactions in the day', () => {
     const late = { spoken: 0, implied: 0, n: 0 };
     const tempers = { easy: 0, normal: 0, picky: 0 };
     for (let seed = 1; seed <= 120; seed++) {
-      const sim = new DaySim({ seed });
+      const sim = new DaySim({ seed, balance: noFreeze });
       let index = 0;
       for (let t = 0; t < defaultBalance.day.lengthSeconds; t += 0.25) for (const e of sim.update(0.25)) {
         if (e.type !== 'customerArrived') continue;
@@ -225,7 +227,7 @@ describe('MEC-006 orders and reactions in the day', () => {
 
   it('spawn interval reaches spawnIntervalMidSeconds at half the day (rule 15)', () => {
     // Plenty of tables so spawns are never held back by a full street.
-    const balance = { ...defaultBalance, day: { ...defaultBalance.day, tables: 60 } };
+    const balance = { ...noFreeze, day: { ...noFreeze.day, tables: 60 } };
     const sim = new DaySim({ seed: 5, balance });
     const times: number[] = [];
     for (let t = 0; t < balance.day.lengthSeconds; t += 0.05) for (const e of sim.update(0.05)) if (e.type === 'customerArrived') times.push(sim.time);
@@ -233,5 +235,35 @@ describe('MEC-006 orders and reactions in the day', () => {
     const i = times.findIndex((t) => t >= half);
     expect(times[i + 1] - times[i]).toBeCloseTo(balance.customers.spawnIntervalMidSeconds, 0);
     expect(times[1] - times[0]).toBeCloseTo(balance.customers.spawnIntervalStartSeconds, 0);
+  });
+});
+
+describe('MEC-007 day length and first-customer freeze', () => {
+  it('a day lasts 5 minutes', () => {
+    expect(defaultBalance.day.lengthSeconds).toBe(300);
+  });
+
+  it('while the first customer waits, the clock, spawns and their patience stand still; cooking still runs', () => {
+    const sim = seated();
+    const c = sim.customers[0];
+    const t0 = sim.time;
+    expect(sim.frozen).toBe(true);
+    run(sim, 120);
+    expect(sim.time).toBe(t0);
+    expect(sim.customers).toHaveLength(1);
+    expect(c.patience).toBe(c.maxPatience);
+    sim.startBlanch();
+    run(sim, defaultBalance.blanch.idealSeconds);
+    expect(sim.releaseBlanch()).toBe('perfect');
+  });
+
+  it('the clock starts once the first customer is served', () => {
+    const sim = seated();
+    cookPerfect(sim);
+    sim.serve(sim.customers[0].table);
+    expect(sim.frozen).toBe(false);
+    const t0 = sim.time;
+    run(sim, 10);
+    expect(sim.time).toBeCloseTo(t0 + 10, 5);
   });
 });

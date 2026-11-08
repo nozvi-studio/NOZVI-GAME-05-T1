@@ -71,6 +71,14 @@ const CSS = `
 .htg-rotate .title { font-size: 22px; font-weight: 800; color: #fff7ea; max-width: 16em; }
 .htg-rotate .sub { font-size: 14px; color: #d9c7a8; max-width: 18em; }
 @keyframes htg-rotate-phone { 0%, 20% { transform: rotate(0deg); } 55%, 80% { transform: rotate(-90deg); } 100% { transform: rotate(0deg); } }
+.htg-tut { position: absolute; top: 56px; left: 50%; transform: translateX(-50%); max-width: min(50vw, 520px); z-index: 3;
+  background: rgba(255,250,240,.96); color: #2a1a12; border: 2px solid #e8b04a; border-radius: 12px; padding: 5px 12px; text-align: center;
+  font-weight: 700; font-size: clamp(12px, min(1.7vw, 3.4vh), 16px); box-shadow: 0 3px 10px rgba(0,0,0,.45); }
+.htg-tut.anchored { transform: translate(-50%, -100%); max-width: min(56vw, 380px); }
+.htg-toasts { position: absolute; left: 50%; top: 34%; transform: translateX(-50%); display: flex; flex-direction: column; gap: 8px; align-items: center; z-index: 4; }
+.htg-toast { background: rgba(28,18,12,.9); color: #fff7ea; border: 2px solid #ffd36b; border-radius: 14px; padding: 8px 16px; max-width: min(70vw, 560px);
+  text-align: center; font-weight: 800; font-size: clamp(13px, min(2vw, 4vh), 20px); animation: htg-toast 4.5s ease-out forwards; }
+@keyframes htg-toast { 0% { opacity: 0; transform: scale(.9); } 8%, 82% { opacity: 1; transform: scale(1); } 100% { opacity: 0; } }
 .htg-summary { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(10,6,4,.6);
   pointer-events: auto; }
 .htg-card { background: #fffaf0; color: #2a1a12; border-radius: 18px; padding: 18px 28px; min-width: 260px; text-align: center;

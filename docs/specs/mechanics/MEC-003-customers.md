@@ -15,6 +15,7 @@ updated: 2026-11-06
 Time pressure and pacing (GDD §4, §5).
 
 ## 5. Rules
+> Rule 1's day length and the first-customer freeze are in MEC-007 (300 s, first customer untimed).
 > Rule 5 (order contents) is superseded by MEC-005 (amounts, exclusions, spoken orders).
 
 1. A day lasts `day.lengthSeconds`; there are `day.tables` tables, one customer each.

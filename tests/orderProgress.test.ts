@@ -91,3 +91,31 @@ describe('speech', () => {
     for (const l of lines) expect(l).not.toMatch(emoji);
   });
 });
+
+// MEC-007 rules 4-6.
+import { TIPS, tutorialCaption } from '../src/ui/tutorial';
+
+describe('tutorial captions', () => {
+  const base: Order = { toppings: [{ item: 'pork', portions: 2 }], garnishes: [{ item: 'scallion', portions: 2 }], broth: 2, avoid: null, style: 'chips', implied: null, tutorial: true };
+
+  it('walks the first customer step by step while the clock is frozen', () => {
+    expect(tutorialCaption({ frozen: true, hint: 'basket', tutorialOrder: base })).toMatch(/rổ mì/);
+    expect(tutorialCaption({ frozen: true, hint: 'toppings', tutorialOrder: base })).toMatch(/2 lần/);
+    expect(tutorialCaption({ frozen: true, hint: 'table', tutorialOrder: base })).toMatch(/chưa tính giờ/);
+  });
+
+  it('explains what is new in the 2nd and 3rd tutorial orders', () => {
+    expect(tutorialCaption({ frozen: false, hint: 'basket', tutorialOrder: { ...base, avoid: { item: 'shrimp', kind: 'allergy' } } })).toMatch(/dị ứng/);
+    expect(tutorialCaption({ frozen: false, hint: 'basket', tutorialOrder: { ...base, broth: 3 } })).toMatch(/Nhiều nước/);
+    expect(tutorialCaption({ frozen: false, hint: 'basket', tutorialOrder: { ...base, toppings: [{ item: 'pork', portions: 1 }] } })).toMatch(/Ít = chạm 1 lần/);
+  });
+
+  it('stays silent once no tutorial customer waits', () => {
+    expect(tutorialCaption({ frozen: false, hint: 'basket', tutorialOrder: null })).toBeNull();
+  });
+
+  it('uses no emoji', () => {
+    const emoji = /\p{Extended_Pictographic}/u;
+    for (const t of Object.values(TIPS)) expect(t).not.toMatch(emoji);
+  });
+});

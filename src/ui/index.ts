@@ -1,5 +1,5 @@
 import type { DaySummary } from '../core/types';
-import { HintRing, SummaryOverlay, WorldLabels, floatText, sayText } from './fx';
+import { HintRing, SummaryOverlay, TutorialBar, WorldLabels, floatText, sayText, toast } from './fx';
 import { RotatePrompt } from './rotatePrompt';
 import { injectStyles } from './styles';
 import { HoldGauge, Hud, OrderBubbles, el, type ScreenPoint } from './widgets';
@@ -9,6 +9,7 @@ export type { BubbleData, GaugeData, ScreenPoint } from './widgets';
 export { orderProgress } from './orderProgress';
 export { shouldAskRotate } from './rotatePrompt';
 export { brothWord, leaveLine, reactionLine } from './speech';
+export { TIPS, tutorialCaption } from './tutorial';
 export type { WorldLabel } from './fx';
 
 /** DOM overlay above the canvas. Takes screen positions only; never touches Three.js. */
@@ -21,6 +22,8 @@ export class Ui {
   readonly labels: WorldLabels;
   readonly summary: SummaryOverlay;
   readonly rotate: RotatePrompt;
+  readonly tutorial: TutorialBar;
+  private toastLayer: HTMLDivElement;
   private fxLayer: HTMLDivElement;
 
   constructor(parent: HTMLElement, onReplay: () => void) {
@@ -31,6 +34,8 @@ export class Ui {
     this.gauge = new HoldGauge(this.root);
     this.hint = new HintRing(this.root);
     this.fxLayer = el('div', '', this.root);
+    this.tutorial = new TutorialBar(this.root);
+    this.toastLayer = el('div', 'htg-toasts', this.root);
     this.hud = new Hud(this.root);
     this.summary = new SummaryOverlay(this.root, onReplay);
     this.rotate = new RotatePrompt(this.root);
@@ -38,6 +43,10 @@ export class Ui {
 
   float(at: ScreenPoint, text: string, small = false): void {
     floatText(this.fxLayer, at, text, small);
+  }
+
+  toast(text: string): void {
+    toast(this.toastLayer, text);
   }
 
   say(at: ScreenPoint, text: string, tone: string): void {
@@ -48,6 +57,7 @@ export class Ui {
     this.gauge.hide();
     this.hint.hide();
     this.bubbles.update([]);
+    this.tutorial.hide();
     this.summary.show(s);
   }
 
@@ -58,5 +68,7 @@ export class Ui {
     this.hint.hide();
     this.bubbles.update([]);
     this.fxLayer.innerHTML = '';
+    this.toastLayer.innerHTML = '';
+    this.tutorial.hide();
   }
 }
