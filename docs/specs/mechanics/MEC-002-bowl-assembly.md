@@ -18,6 +18,8 @@ Turn the order into a sequence of quick cooking actions whose accuracy decides t
 Kitchen: `basket` (graded noodles or empty), `bowl` (noodles, toppings, broth, garnishes). One bowl in progress at a time.
 
 ## 5. Rules
+> Rules 3, 6 and 7 are superseded by MEC-005 (ingredient portions, amount-aware scoring, perfect bowl).
+
 1. Blanch (MEC-001): only when the basket is empty and not blanching. Hold time grows with time; releasing grades it via `gradeBlanch`. Holding beyond `blanch.maxHoldSeconds` auto-releases.
 2. Noodles to bowl: only when the basket holds noodles and the bowl has none. Moves the grade into `bowl.noodles` and empties the basket.
 3. Toppings and garnishes: only when the bowl has noodles. Each item at most once; repeated taps are ignored.

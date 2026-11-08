@@ -1,9 +1,9 @@
 ---
 id: MEC-005
 type: mechanic
-status: draft
+status: approved
 owner: game-design
-version: 0.1
+version: 0.2
 parent: GDD
 related: [MEC-002, MEC-003, MEC-004]
 studio_standard: 0.1
@@ -11,7 +11,7 @@ updated: 2026-11-08
 ---
 # MEC-005 — Ingredient amounts, spoken orders and customer reactions
 
-> **Draft change proposal (owner request 2026-11-08).** Nothing here is implemented until the owner approves it. Every number is a proposal and will live in `config/balance.json`. Once approved, MEC-005 owns amounts, spoken orders and reactions, and it **supersedes** MEC-002 rules 3, 6, 7, MEC-003 rule 5 and MEC-004 rule 3 (those specs will point here).
+> **Approved by the owner on 2026-11-08** (answers in §12). Every number lives in `config/balance.json`. Once approved, MEC-005 owns amounts, spoken orders and reactions, and it **supersedes** MEC-002 rules 3, 6, 7, MEC-003 rule 5 and MEC-004 rule 3 (those specs will point here).
 
 ## 1. Purpose
 Make orders feel like real street-stall requests ("nhiều hành, ít thịt, không tiêu") and make cooking mistakes matter: the player must read carefully, tap the right number of times, and cook well, or the customer complains, refuses to pay and scolds.
@@ -39,7 +39,7 @@ Tap on `topping:*` / `garnish:*` (portion); customer spawn (order generation); s
 **Order generation (replaces MEC-003 rule 5)**
 3. The number of toppings and garnishes per order keeps today's brackets (`customers.toppingsPerOrder`, `garnishesPerOrder`). Each chosen ingredient gets an amount drawn with weights `amounts.weights` (ít 25 %, vừa 50 %, nhiều 25 %).
 4. With chance `orders.exclusionChance` (30 %), the order adds one exclusion "không X", X drawn from ingredients not in the order.
-5. From `orders.spokenFromSeconds` (30 s), each new order is spoken with chance `orders.spokenChance` (30 %). Never for the first customer.
+5. From `orders.spokenFromSeconds` (30 s), each new order is spoken with chance `orders.spokenChance` (50 %). Never for the first customer.
 6. The first customer keeps a fixed chip order for the tutorial: thịt bằm `vừa` + hành `vừa` (2 + 2 taps). The FTUE hint stays on an ingredient until its amount is reached.
 7. Same seed → same orders, amounts, exclusions and spoken/chip choice (deterministic RNG).
 
@@ -80,13 +80,13 @@ Tap on `topping:*` / `garnish:*` (portion); customer spawn (order generation); s
 - Reaction line in a speech bubble over the customer (Vietnamese, playful, **no profanity**): happy "Ngon quá!", ok "Được đó.", complain "Hơi dở nha, trả nửa tiền thôi!", scold "Tôi dặn không tiêu mà! Không trả đâu!" or "Dở quá, không ăn nổi!". Scold also uses the angry face and red tint (today's give-up look). Text plus colour, never colour alone.
 - Floating money shows the actual amount (+0 k, +15 k, +38 k).
 
-## 9. Balance parameters (proposed, to be added to `config/balance.json`)
+## 9. Balance parameters (`config/balance.json`)
 | Key | Default | Note |
 |---|---|---|
 | `amounts.maxPortions` | 4 | Cap per ingredient |
 | `amounts.weights` | ít 0.25, vừa 0.5, nhiều 0.25 | Amount draw |
 | `orders.exclusionChance` | 0.3 | Adds "không X" |
-| `orders.spokenFromSeconds` / `spokenChance` | 30 / 0.3 | Spoken orders |
+| `orders.spokenFromSeconds` / `spokenChance` | 30 / 0.5 | Spoken orders |
 | `quality.missingPenalty` | 0.34 | Renamed from `mistakePenalty` |
 | `quality.portionPenalty` | 0.12 | Per portion off |
 | `quality.forbiddenPenalty` | 0.5 | Exclusion violated |
@@ -112,9 +112,9 @@ Tap on `topping:*` / `garnish:*` (portion); customer spawn (order generation); s
 - Scene: piece count per portion (`src/scene/bowl.ts`); customer face (`customers.ts`).
 - Docs: GDD §2 table and §7, MEC-002/003/004 pointers, ARCHITECTURE §3 types, DECISIONS.
 
-## 12. Open questions (owner)
-1. Amount scale ít 1 / vừa 2 / nhiều 3 (about twice the taps), or a lighter scale?
-2. On `scold`: pay 0 only, or also a fine (for example −10 k)?
-3. Scolding tone: playful lines without profanity (proposed), or harsher?
-4. Spoken orders: about 30 % of orders after 30 s (proposed), or more / less often?
-5. Retune the revenue target after the bot probe (proposed), or keep 250 k?
+## 12. Owner decisions (2026-11-08)
+1. Amount scale: ít 1 / vừa 2 / nhiều 3.
+2. Scold: the customer pays nothing; no extra fine (`reactions.scoldFine` = 0).
+3. Tone: playful lines, no profanity.
+4. Spoken orders: about 50 % of orders from 30 s on.
+5. Revenue target: keep 250 k for now; re-run the bot probe after implementation and propose a new value for approval.

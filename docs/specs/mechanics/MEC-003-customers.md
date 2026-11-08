@@ -15,6 +15,8 @@ updated: 2026-11-06
 Time pressure and pacing (GDD §4, §5).
 
 ## 5. Rules
+> Rule 5 (order contents) is superseded by MEC-005 (amounts, exclusions, spoken orders).
+
 1. A day lasts `day.lengthSeconds`; there are `day.tables` tables, one customer each.
 2. The first customer spawns at `customers.firstSpawnSeconds` with the fixed order pork + scallion (FTUE, GDD §3b).
 3. Spawn interval interpolates linearly from `spawnIntervalStartSeconds` to `spawnIntervalEndSeconds` over the day. When the interval elapses and no table is free, the spawn waits until one frees up. The table is chosen at random among free tables.
