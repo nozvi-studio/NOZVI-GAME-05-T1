@@ -3,7 +3,7 @@ id: ARCH-002
 type: architecture
 status: approved
 owner: tech-lead
-version: 0.3
+version: 0.4
 parent: GDD
 related: [ARCH-001, PLAN-001]
 studio_standard: 0.1
@@ -82,6 +82,12 @@ Numeric targets marked *(tune)* are proposals to be fixed during the phase and r
 | VIS-406 | Customer reactions (J4, N10): happy and angry reactions, readable face | Visible on serve and on give-up |
 | VIS-407 | Coin pop and tip sparkle on payment (J7); "bowl ready" cue on bowl and target table when the order is complete (U4, J5) | Coin effect on every serve; sparkle only on perfect |
 | VIS-408 | Sound and haptics (J8, J9): synthesized WebAudio, `navigator.vibrate`. **Blocked until the owner lifts the deferral in DECISIONS 2026-11-07** | Owner approval recorded |
+
+### Phone layout (owner request 2026-11-08, tablets out of scope)
+| ID | Requirement | Acceptance |
+|---|---|---|
+| VIS-501 | A touch phone held in portrait shows a full-screen popup asking to rotate sideways; the day pauses while it shows and resumes on rotation. Mouse devices and tablets (short screen side ≥ 600 px) never see it | Unit test of `shouldAskRotate`; emulated phone: popup visible and timer frozen in portrait, hidden and timer running after rotation; no popup on a narrow mouse window or a 768×1024 tablet |
+| VIS-502 | Phone landscape (height < 480 px, aspect ≥ 1.6) frames the cart a little closer (FOV 46 → 41, ≈ 13 % zoom). Other sizes keep the base camera | Unit test of `cameraFov`; screenshots at 667×375, 740×360, 812×375, 844×390 and 932×430 show labels and the bottom row inside the screen and bubbles clear of the HUD |
 
 ## 4. Runtime components touched
 | Component | Change | Interface impact |

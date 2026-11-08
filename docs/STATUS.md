@@ -18,11 +18,13 @@
 | 2 Asset & material | Empty bowl, ingredient size, bowl scale, material rule (VIS-201…205) | Done, **awaiting owner review**. Trays and pots unchanged on purpose | `0bff32d` |
 | 3 Lighting & environment | Even counter light, shadow frustum, contact shadows, declutter festoon poles / lamp pipe / cabinet strip (VIS-301…304) | Not started, starts after the Phase 2 review | — |
 | 4 Juice & animation | Hover, invalid-tap feedback, pop-in, drag polish, customer reactions, coin / tip, "bowl ready" cue (VIS-401…407) | Not started | — |
+Phone layout (owner request 2026-11-08, VIS-501/502): rotate popup + closer camera on phone landscape, implemented, awaiting review on a real phone. Tablets out of scope.
 Deferred by owner: env map (VIS-206), sound and haptics (VIS-408). Details and acceptance criteria: ARCH-002 §3, steps: PLAN-001.
 
 Playtest build (private, owner shares it): https://claude.ai/artifact/FD2D6yUBwNEWZixyqQERPo (version 4 = Phase 1 + 2, commit `0bff32d`), built with `npx vite build --base=./`. Republish after each phase.
 
 ## Owner review needed
+0. **Phone layout** (new): on a real phone, check the rotate popup (portrait) and the closer framing (landscape). Known limits: browsers cannot force landscape, so players must rotate; with the phone's auto-rotate lock on, the popup stays and the day stays paused.
 1. **Phase 2** on the playtest link: does the empty bowl read as a bowl? Are garnish and toppings readable inside the bowl on a phone? Say "ok" or point at what is wrong; Phase 3 waits for this.
 2. **Real phone check** (not possible here): do the emoji 🫀 (liver) and 🧂 (pepper) render, and is the label row readable at 844×390?
 3. **Phase 4 gates:** decide on sound and haptics (VIS-408) and the code-generated env map (VIS-206) before those steps.

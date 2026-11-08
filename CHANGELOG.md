@@ -12,6 +12,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: Se
 - Visual polish Phase 1 (ARCH-002 / PLAN-001, presentation only): order chips show done / not done against the current bowl and a fully satisfied bubble gets a green outline; open garnish jars with visible contents; soft counter zones and a bowl ring; counter label pills with icons; `orderProgress` helper with 6 unit tests.
 - Visual polish Phase 2 (presentation only): the empty bowl reads as a white glazed bowl (wider foot, bright inner glaze, blue inner band); garnish pieces and in-bowl toppings enlarged for phone viewports; counter bowl scaled 1.15×.
 - GitHub Pages deploy workflow (`.github/workflows/deploy.yml`): `npm ci`, tests, typecheck, build with `--base=./`, then publish `dist/` to the `gh-pages` branch on pushes to master or manual run.
+- Phone layout: a "rotate your phone" popup for touch phones held upright (the day pauses until they rotate), and a slightly closer camera on phones in landscape (FOV 46 → 41). Tablets are not targeted yet. `shouldAskRotate` and `cameraFov` have unit tests.
 ### Changed
 - Phase 1: bubbles and floating text anchor to the seated head instead of a standing height; floor grout softened, tiles enlarged and the floor dimmed; counter darkened and matte with dark tray liners; trash can scaled down and toned (hit box unchanged); clearer icons for liver and pepper.
 - Red awning removed (it hid seated customers); replaced by a slim pipe with a shaded bulb.

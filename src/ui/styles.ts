@@ -41,6 +41,15 @@ const CSS = `
   font-size: clamp(12px, min(1.7vw, 3.4vh), 15px); font-weight: 700; white-space: nowrap; }
 /* Short landscape phones: the row of counter labels is too tight for icons (they stay on the order chips). */
 @media (max-height: 480px) { .htg-label .ico { display: none; } .htg-label { padding: 0 6px; } }
+.htg-rotate { position: absolute; inset: 0; z-index: 10; display: none; flex-direction: column; align-items: center; justify-content: center;
+  gap: 18px; padding: 24px; text-align: center; background: rgba(14, 9, 6, .96); pointer-events: auto; }
+.htg-rotate .phone { width: 56px; height: 96px; border: 5px solid #ffd36b; border-radius: 12px; position: relative;
+  animation: htg-rotate-phone 2.4s ease-in-out infinite; }
+.htg-rotate .phone::after { content: ""; position: absolute; left: 50%; bottom: 6px; width: 16px; height: 4px; margin-left: -8px;
+  border-radius: 2px; background: #ffd36b; }
+.htg-rotate .title { font-size: 22px; font-weight: 800; color: #fff7ea; max-width: 16em; }
+.htg-rotate .sub { font-size: 14px; color: #d9c7a8; max-width: 18em; }
+@keyframes htg-rotate-phone { 0%, 20% { transform: rotate(0deg); } 55%, 80% { transform: rotate(-90deg); } 100% { transform: rotate(0deg); } }
 .htg-summary { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(10,6,4,.6);
   pointer-events: auto; }
 .htg-card { background: #fffaf0; color: #2a1a12; border-radius: 18px; padding: 18px 28px; min-width: 260px; text-align: center;

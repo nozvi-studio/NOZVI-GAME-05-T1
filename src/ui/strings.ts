@@ -17,6 +17,8 @@ export const STR = {
   broth: 'Chan nước',
   bowl: 'Tô',
   trash: 'Bỏ',
+  rotateTitle: 'Xoay ngang điện thoại để chơi',
+  rotateSub: 'Game tạm dừng cho đến khi bạn xoay ngang',
   webglLost: 'Mất kết nối đồ họa. Tải lại trang?',
   reload: 'Tải lại',
 } as const;

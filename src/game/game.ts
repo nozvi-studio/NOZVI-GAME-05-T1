@@ -3,7 +3,7 @@ import { DaySim } from '../core';
 import type { Bowl, GameEvent, Grade, HintTarget } from '../core/types';
 import { GARNISHES, TOPPINGS } from '../core/types';
 import { PointerInput } from '../input';
-import { COUNTER_TOP, CustomerViews, SEATED_HEAD_TOP, createStreetScene, type StreetScene } from '../scene';
+import { COUNTER_TOP, CustomerViews, SEATED_HEAD_TOP, cameraFov, createStreetScene, type StreetScene } from '../scene';
 import { GARNISH_ICON, GARNISH_LABEL, GRADE_LABEL, OBJECT_ICON, STR, TOPPING_ICON, TOPPING_LABEL, Ui, money, orderProgress, type BubbleData, type ScreenPoint, type WorldLabel } from '../ui';
 
 const MAX_DT = 0.1; // ARCHITECTURE §6: hidden tab must not skip the day.
@@ -50,7 +50,9 @@ export class Game {
     this.width = width;
     this.height = height;
     this.street.camera.aspect = width / height;
+    this.street.camera.fov = cameraFov(width, height); // phones sideways: slightly closer (VIS-502)
     this.street.camera.updateProjectionMatrix();
+    if (this.ui.rotate.update()) this.input.cancel(); // upright phone: popup shows and the day pauses (VIS-501)
     this.renderer.setSize(width, height);
   }
 
@@ -67,7 +69,8 @@ export class Game {
   frame(dt: number): void {
     dt = Math.min(Math.max(dt, 0), MAX_DT);
     this.clockTime += dt;
-    if (!this.sim.ended) for (const e of this.sim.update(dt)) this.onEvent(e);
+    // The day is paused while the rotate popup covers the screen.
+    if (!this.sim.ended && !this.ui.rotate.visible) for (const e of this.sim.update(dt)) this.onEvent(e);
     this.syncScene();
     this.street.update(dt, this.clockTime, {
       blanching: this.sim.kitchen.blanching !== null,

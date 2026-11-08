@@ -1,11 +1,13 @@
 import type { DaySummary } from '../core/types';
 import { HintRing, SummaryOverlay, WorldLabels, floatText } from './fx';
+import { RotatePrompt } from './rotatePrompt';
 import { injectStyles } from './styles';
 import { HoldGauge, Hud, OrderBubbles, el, type ScreenPoint } from './widgets';
 
 export { STR, TOPPING_LABEL, GARNISH_LABEL, TOPPING_ICON, GARNISH_ICON, OBJECT_ICON, GRADE_LABEL, money } from './strings';
 export type { BubbleData, GaugeData, ScreenPoint } from './widgets';
 export { orderProgress } from './orderProgress';
+export { shouldAskRotate } from './rotatePrompt';
 export type { WorldLabel } from './fx';
 
 /** DOM overlay above the canvas. Takes screen positions only; never touches Three.js. */
@@ -17,6 +19,7 @@ export class Ui {
   readonly hint: HintRing;
   readonly labels: WorldLabels;
   readonly summary: SummaryOverlay;
+  readonly rotate: RotatePrompt;
   private fxLayer: HTMLDivElement;
 
   constructor(parent: HTMLElement, onReplay: () => void) {
@@ -29,6 +32,7 @@ export class Ui {
     this.fxLayer = el('div', '', this.root);
     this.hud = new Hud(this.root);
     this.summary = new SummaryOverlay(this.root, onReplay);
+    this.rotate = new RotatePrompt(this.root);
   }
 
   float(at: ScreenPoint, text: string, small = false): void {

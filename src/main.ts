@@ -17,6 +17,7 @@ const game = new Game(renderer, document.body);
 const resize = () => game.resize(window.innerWidth, window.innerHeight);
 resize();
 window.addEventListener('resize', resize);
+window.addEventListener('orientationchange', resize);
 
 // ARCHITECTURE §6: lost WebGL context → reload prompt.
 renderer.domElement.addEventListener('webglcontextlost', (e) => {
