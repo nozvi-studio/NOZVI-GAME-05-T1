@@ -38,6 +38,7 @@ Cooking steps (each one short interaction):
 | MEC-002 | Order & assembly | Match toppings / broth to the order | `docs/specs/mechanics/MEC-002-bowl-assembly.md` | Approved |
 | MEC-003 | Customer patience | Time pressure, drives tips | `docs/specs/mechanics/MEC-003-customers.md` | Approved |
 | MEC-004 | Serve to table | Deliver to the correct customer | `docs/specs/mechanics/MEC-004-serve-payment.md` | Approved |
+| MEC-005 | Amounts, spoken orders, reactions | Read orders carefully; bad or wrong bowls cost money and anger customers | `docs/specs/mechanics/MEC-005-amounts-spoken-orders-reactions.md` | Draft |
 
 ## 3. Controls & input [REQUIRED]
 - Input scheme: mouse or touch only — tap, hold, drag. Landscape. Fixed camera, tilted top-down from behind the cart.

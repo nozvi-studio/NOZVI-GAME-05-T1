@@ -1,5 +1,5 @@
 # Docs map (read this instead of scanning docs/)
-Updated: 2026-11-07
+Updated: 2026-11-08
 
 ## 1. Document index
 Only files listed here exist. Status: Draft / Approved / Deprecated.
@@ -15,6 +15,7 @@ Only files listed here exist. Status: Draft / Approved / Deprecated.
 | MEC-002 | `docs/specs/mechanics/MEC-002-bowl-assembly.md` | Bowl assembly rules, quality formula | Approved |
 | MEC-003 | `docs/specs/mechanics/MEC-003-customers.md` | Customers, patience, day flow | Approved |
 | MEC-004 | `docs/specs/mechanics/MEC-004-serve-payment.md` | Serving and payment | Approved |
+| MEC-005 | `docs/specs/mechanics/MEC-005-amounts-spoken-orders-reactions.md` | Ingredient amounts, spoken orders, customer reactions and penalties (change proposal over MEC-002/003/004) | Draft |
 | ARCH-002 | `docs/specs/ARCH-002-visual-readability-and-feedback.md` | Visual readability, polish and feedback requirements (VIS-xxx), acceptance, owner decisions | Approved |
 | PLAN-001 | `docs/plans/PLAN-001-visual-polish.md` | Ordered implementation plan for ARCH-002 (4 phases) | Approved |
 | STD | `docs/standards/README.md` | Studio standards + AI rules index (binding) | Approved |
