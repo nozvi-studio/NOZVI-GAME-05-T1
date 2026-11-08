@@ -4,7 +4,7 @@ import type { Bowl, GameEvent, Grade, HintTarget } from '../core/types';
 import { GARNISHES, TOPPINGS } from '../core/types';
 import { PointerInput } from '../input';
 import { COUNTER_TOP, CustomerViews, MAX_TABLES, SEATED_HEAD_TOP, cameraFov, createStreetScene, type StreetScene } from '../scene';
-import { GARNISH_LABEL, GRADE_LABEL, INTRO, STOP_CUE, STR, TIPS, TOPPING_LABEL, Ui, brothWord, explicitOrder, firstBowlLine, firstDayLine, leaveLine, money, orderProgress, reactionLine, tutorialCaption, type BubbleData, type ScreenPoint, type WorldLabel } from '../ui';
+import { GARNISH_LABEL, GRADE_LABEL, INTRO, STOP_CUE, STR, TIPS, TOPPING_LABEL, Ui, brothWord, firstBowlLine, firstDayLine, leaveLine, money, orderProgress, reactionLine, tutorialCaption, type BubbleData, type ScreenPoint, type WorldLabel } from '../ui';
 
 const MAX_DT = 0.1; // ARCHITECTURE §6: hidden tab must not skip the day.
 /** World units per second the camera pans while a dragged object is held at a screen edge. */
@@ -35,8 +35,6 @@ export class Game {
   /** MEC-009 rule 4: camera pan along x and its limit for the current tables and viewport. */
   private pan = 0;
   private panLimit = 0;
-  /** MEC-008 rule 3: implied phrases served badly this session get a free translation next time. */
-  private failedImplied = new Set<string>();
   /** MEC-007 rule 4b: verdict on the first bowl, shown with "Để tôi thử" once the first customer has left. */
   private firstVerdict: string | null = null;
   private verdictShown = false;
@@ -202,7 +200,6 @@ export class Game {
       if (c.id === 1 && this.day === 1) {
         this.firstVerdict = firstBowlLine(p.perfect, p.reaction); // MEC-007 rule 4b, shown once they have left
       }
-      if (c.order.implied && (p.reaction === 'complain' || p.reaction === 'scold')) this.failedImplied.add(c.order.implied);
       if (c.order.tutorial) this.tutorialFinished();
       const at = this.project(this.headPos(c.table, 0.3));
       this.ui.float(at, `+${money(p.total)}`);
@@ -267,8 +264,6 @@ export class Game {
         patience: c.patience / c.maxPatience,
         hurried: c.kind === 'hurried',
         progress: orderProgress(c.order, sim.kitchen.bowl, sim.balance.broth),
-        // MEC-008 rule 3: free translation for an implied phrase served badly earlier this session.
-        hint: c.order.implied && !c.order.clarified && this.failedImplied.has(c.order.implied) ? explicitOrder(c.order, c.id) : null,
         canAsk: sim.canAskAgain(c),
       });
     }

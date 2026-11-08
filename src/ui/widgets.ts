@@ -49,8 +49,6 @@ export interface BubbleData {
   hurried: boolean;
   /** What the current bowl already holds for this order (VIS-102). */
   progress: OrderProgress;
-  /** MEC-008 rule 3: free translation shown under an implied phrase, or null. */
-  hint: string | null;
   /** MEC-008 rule 2a: "Hỏi lại" is unlocked (a quarter of the patience has passed). */
   canAsk: boolean;
 }
@@ -67,7 +65,7 @@ interface BubbleView {
   garnishChips: Chip[];
   brothChip: Chip | null;
   spoken: boolean;
-  /** Rebuild the bubble when this changes (clarified, hint). */
+  /** Rebuild the bubble when this changes (clarified, ask unlocked). */
   key: string;
 }
 
@@ -99,7 +97,7 @@ export class OrderBubbles {
     for (const b of list) {
       seen.add(b.id);
       let bubble = this.bubbles.get(b.id);
-      const key = `${b.order.clarified}|${b.hint ?? ''}|${b.canAsk}`;
+      const key = `${b.order.clarified}|${b.canAsk}`;
       if (bubble && bubble.key !== key) {
         bubble.root.remove();
         bubble = undefined;
@@ -157,7 +155,6 @@ export class OrderBubbles {
       root.classList.add('spoken');
       const text = o.clarified ? explicitOrder(o, b.id) : spokenOrder(o, b.id);
       el('div', 'say', root).textContent = `“${text}”`;
-      if (b.hint) el('div', 'hint', root).textContent = b.hint;
       if (b.canAsk) {
         const ask = el('button', 'htg-ask', root);
         ask.textContent = STR.askAgain;

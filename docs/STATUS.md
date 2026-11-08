@@ -40,6 +40,7 @@ Playtest build (private, owner shares it): https://claude.ai/artifact/FD2D6yUBwN
 5. Code-split Three.js if bundle grows (Vite chunk-size warning at 512 kB raw)
 
 ## Blockers / open questions for human
+- Saving progress across page loads: deferred by the owner (2026-11-08); every load starts at day 1.
 - Final game name ("Hu Tieu Ganh" is a working title).
 
 ## Known issues / tech debt

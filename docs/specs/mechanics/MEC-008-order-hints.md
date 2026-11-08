@@ -3,7 +3,7 @@ id: MEC-008
 type: mechanic
 status: approved
 owner: game-design
-version: 0.3
+version: 0.4
 parent: GDD
 related: [MEC-005, MEC-006, MEC-007]
 studio_standard: 0.1
@@ -42,7 +42,7 @@ Ship **A + D** first, keep **B** for the meta milestone (M3, together with saved
 1. Spoken bubbles (explicit or implied) show a "Hỏi lại" button. Chip orders do not.
 2a. The button only appears once a quarter of the customer's patience has passed (`hints.askAfterShare` 0.25), so the player tries to read first (owner 2026-11-08); `DaySim.askAgain` refuses earlier taps.
 2. Tapping it costs `hints.askPatienceSeconds` (8 s) of patience, never below `hints.minPatienceSeconds` (3 s). The bubble then shows the explicit sentence (implied orders) or word chips (explicit orders). Once per customer.
-3. A phrase served with complain or scold is remembered for the session. The next order with that phrase shows its explicit sentence in small text under the phrase, at no cost.
+3. ~~Free translation after a failed phrase (option D).~~ **Parked by the owner 2026-11-08**: it would end up translating every spoken phrase later in the day; customers keep saying the phrase as is. Not implemented.
 4. Hints never change grading; they only change what is shown.
 5. Tutorial customers (day 1) do not need hints, so the button is hidden for them.
 
@@ -56,7 +56,7 @@ Ship **A + D** first, keep **B** for the meta milestone (M3, together with saved
 Each hint costs about 15 % of a regular customer's patience (8 / 55 s). A bot probe after implementation should check that using a hint on every implied order still reaches the target on some days at ~20 s per bowl.
 
 ## 12. Owner decisions (2026-11-08)
-1. A + D (owner).
+1. A + D (owner); D parked on 2026-11-08, only A is live.
 2. Cost: patience 8 s, floor 3 s (default, not answered).
 3. Once per customer (default, not answered).
 4. Notebook (B) deferred to M3 (default, not answered).

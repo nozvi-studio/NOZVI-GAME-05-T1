@@ -25,7 +25,6 @@ const CSS = `
   .htg-bubble.spoken { min-width: 0; max-width: 31vw; }
   .htg-chip { padding: 0 4px; }
 }
-.htg-bubble .hint { font-size: .85em; color: #6b5a40; margin: -2px 0 4px; }
 .htg-ask { pointer-events: auto; font: inherit; font-size: .9em; font-weight: 800; min-height: 26px; padding: 2px 12px; margin: 0 0 5px;
   border: 0; border-radius: 999px; background: #e8b04a; color: #2a1a12; cursor: pointer; touch-action: manipulation; }
 .htg-bubble.edge-left::before, .htg-bubble.edge-right::before { content: ""; position: absolute; top: 50%; margin-top: -9px; border: 9px solid transparent; }
