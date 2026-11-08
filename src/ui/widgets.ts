@@ -1,6 +1,6 @@
 import type { Order } from '../core/types';
 import type { LineProgress, OrderProgress } from './orderProgress';
-import { avoidChip, brothWord, lineText, spokenOrder } from './speech';
+import { avoidChip, brothWord, explicitOrder, lineText, spokenOrder } from './speech';
 import { STR, clock, money } from './strings';
 
 /** Approximate bottom edge of the HUD bar, in CSS px. */
@@ -50,6 +50,8 @@ export interface BubbleData {
   hurried: boolean;
   /** What the current bowl already holds for this order (VIS-102). */
   progress: OrderProgress;
+  /** MEC-008 rule 3: free translation shown under an implied phrase, or null. */
+  hint: string | null;
 }
 
 interface Chip {
@@ -64,6 +66,8 @@ interface BubbleView {
   garnishChips: Chip[];
   brothChip: Chip | null;
   spoken: boolean;
+  /** Rebuild the bubble when this changes (clarified, hint). */
+  key: string;
 }
 
 /** MEC-006 rule 5: green when exact, never red; tutorial chips also show given/wanted. */
@@ -77,23 +81,48 @@ function showChip(chip: Chip | undefined | null, p: LineProgress): void {
 export class OrderBubbles {
   private bubbles = new Map<number, BubbleView>();
 
-  constructor(private root: HTMLElement) {}
+  constructor(
+    private root: HTMLElement,
+    private onAsk: (customerId: number) => void,
+  ) {}
 
   update(list: BubbleData[]): void {
     const seen = new Set<number>();
+    // Bubbles that would overlap (edge-pinned or near-edge ones) stack downward instead (MEC-009 rule 6).
+    const placed: Array<{ l: number; r: number; t: number; b: number }> = [];
     for (const b of list) {
       seen.add(b.id);
       let bubble = this.bubbles.get(b.id);
+      const key = `${b.order.clarified}|${b.hint ?? ''}`;
+      if (bubble && bubble.key !== key) {
+        bubble.root.remove();
+        bubble = undefined;
+      }
       if (!bubble) {
-        bubble = this.create(b);
+        bubble = this.create(b, key);
         this.bubbles.set(b.id, bubble);
       }
       // Keep bubbles on screen and below the HUD bar (short landscape phones).
       const halfW = bubble.root.offsetWidth / 2 + 6;
       const x = Math.min(window.innerWidth - halfW, Math.max(halfW, b.at.x));
-      const y = Math.max(HUD_BOTTOM_PX + bubble.root.offsetHeight, b.at.y);
+      const w = bubble.root.offsetWidth;
+      const h = bubble.root.offsetHeight;
+      let y = Math.max(HUD_BOTTOM_PX + h, b.at.y);
+      for (let moved = true; moved; ) {
+        moved = false;
+        for (const p of placed) {
+          if (x - w / 2 < p.r && x + w / 2 > p.l && y - h < p.b && y > p.t) {
+            y = p.b + 6 + h;
+            moved = true;
+          }
+        }
+      }
+      placed.push({ l: x - w / 2, r: x + w / 2, t: y - h, b: y });
       bubble.root.style.left = `${x}px`;
       bubble.root.style.top = `${y}px`;
+      // MEC-009 rule 6: a customer off-screen keeps the bubble pinned at the edge, pointing toward them.
+      bubble.root.classList.toggle('edge-left', b.at.x < 0);
+      bubble.root.classList.toggle('edge-right', b.at.x > window.innerWidth);
       const p = Math.max(0, Math.min(1, b.patience));
       bubble.bar.style.width = `${p * 100}%`;
       bubble.bar.style.backgroundColor = p > 0.5 ? '#3fbf5a' : p > 0.25 ? '#e8c547' : '#e04848';
@@ -113,13 +142,26 @@ export class OrderBubbles {
     }
   }
 
-  private create(b: BubbleData): BubbleView {
+  private create(b: BubbleData, key: string): BubbleView {
     const root = el('div', 'htg-bubble', this.root);
-    const spoken = b.order.style !== 'chips';
-    const view: BubbleView = { root, bar: root, toppingChips: [], garnishChips: [], brothChip: null, spoken };
+    const o = b.order;
+    // MEC-008 rule 2: "Hỏi lại" turns an implied phrase into an explicit sentence, and an explicit sentence into chips.
+    const spoken = o.style === 'implied' || (o.style === 'explicit' && !o.clarified);
+    const view: BubbleView = { root, bar: root, toppingChips: [], garnishChips: [], brothChip: null, spoken, key };
     if (spoken) {
       root.classList.add('spoken');
-      el('div', 'say', root).textContent = `“${spokenOrder(b.order, b.id)}”`;
+      const text = o.clarified ? explicitOrder(o, b.id) : spokenOrder(o, b.id);
+      el('div', 'say', root).textContent = `“${text}”`;
+      if (b.hint) el('div', 'hint', root).textContent = b.hint;
+      if (!o.clarified && !o.tutorial) {
+        const ask = el('button', 'htg-ask', root);
+        ask.textContent = STR.askAgain;
+        ask.addEventListener('pointerdown', (ev) => {
+          ev.stopPropagation();
+          ev.preventDefault();
+          this.onAsk(b.id);
+        });
+      }
     } else {
       const chip = (row: HTMLElement, cls: string, text: string, counted: boolean): Chip => {
         const c = el('span', cls, row);

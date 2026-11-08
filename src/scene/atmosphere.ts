@@ -144,7 +144,7 @@ function buildStreetLamp(): THREE.Group {
 /** Festoon string of bulbs over the tables, hung between two thin poles just off-screen. */
 function buildFestoon(): { group: THREE.Group; bulbs: THREE.Sprite[]; light: THREE.PointLight } {
   const g = new THREE.Group();
-  const halfSpan = 5;
+  const halfSpan = 7.8; // poles outside the 5-table row (MEC-009 rule 3)
   const topY = 3.35;
   const sag = 0.65;
   const z = 0.9;
@@ -157,8 +157,8 @@ function buildFestoon(): { group: THREE.Group; bulbs: THREE.Sprite[]; light: THR
   g.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(points), new THREE.LineBasicMaterial({ color: 0x151210 })));
   const colors = [0xffd27a, 0xffb05c, 0xfff0c8, 0xff8a5c];
   const halos: THREE.Sprite[] = [];
-  for (let i = 1; i < 16; i++) {
-    const t = i / 16;
+  for (let i = 1; i < 24; i++) {
+    const t = i / 24;
     const x = -halfSpan + t * halfSpan * 2;
     const b = bulb(colors[i % colors.length], 0.045, 0.55);
     b.position.set(x, topY - sag * 4 * t * (1 - t) - 0.07, z);
@@ -178,14 +178,14 @@ function buildFestoon(): { group: THREE.Group; bulbs: THREE.Sprite[]; light: THR
 
 export function buildStreetDecor(scene: THREE.Scene): Atmosphere {
   const lamp = buildStreetLamp();
-  lamp.position.set(-4.6, 0.1, -0.6);
+  lamp.position.set(-8.4, 0.1, -0.6); // clear of the 5-table row (MEC-009 rule 3)
   scene.add(lamp);
 
   const festoon = buildFestoon();
   scene.add(festoon.group);
 
-  // Parked motorbikes along the curb, placed clear of the customers' walking paths.
-  for (const [x, color] of [[-1.7, 0x9b3a33], [6.6, 0x3d5f86], [-7.4, 0x4a4a4a]] as const) {
+  // Parked motorbikes along the curb, in the gaps between the customers' walking paths for up to 5 tables.
+  for (const [x, color] of [[-0.75, 0x9b3a33], [9.4, 0x3d5f86], [-9.8, 0x4a4a4a]] as const) {
     const bike = buildMotorbike(color);
     bike.position.set(x, 0, -3.65);
     bike.rotation.y = x < 0 ? 0.08 : Math.PI - 0.08;

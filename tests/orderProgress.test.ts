@@ -11,6 +11,7 @@ const order: Order = {
   style: 'chips',
   implied: null,
   tutorial: true,
+  clarified: false,
 };
 
 const bowl = (fill: (b: Bowl) => void = () => {}): Bowl => {
@@ -96,7 +97,7 @@ describe('speech', () => {
 import { TIPS, tutorialCaption } from '../src/ui/tutorial';
 
 describe('tutorial captions', () => {
-  const base: Order = { toppings: [{ item: 'pork', portions: 2 }], garnishes: [{ item: 'scallion', portions: 2 }], broth: 2, avoid: null, style: 'chips', implied: null, tutorial: true };
+  const base: Order = { toppings: [{ item: 'pork', portions: 2 }], garnishes: [{ item: 'scallion', portions: 2 }], broth: 2, avoid: null, style: 'chips', implied: null, tutorial: true, clarified: false };
 
   it('walks the first customer step by step while the clock is frozen', () => {
     expect(tutorialCaption({ frozen: true, hint: 'basket', tutorialOrder: base })).toMatch(/rổ mì/);

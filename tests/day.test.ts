@@ -45,6 +45,7 @@ describe('MEC-003 customers & day', () => {
       style: 'chips',
       implied: null,
       tutorial: true,
+      clarified: false,
     });
     expect(sim.customers[0].temper).toBe('easy');
   });
@@ -299,5 +300,55 @@ describe('MEC-007 later days', () => {
     run(sim, cfg.firstSpawnSeconds + cfg.arriveSeconds + 0.3);
     expect(sim.customers[0].order.tutorial).toBe(true);
     expect(sim.frozen).toBe(true);
+  });
+});
+
+describe('MEC-008 ask again', () => {
+  const spokenCustomer = () => {
+    const sim = new DaySim({ seed: 3, day: 2 });
+    for (let i = 0; i < 4000 && !sim.customers.some((c) => c.state === 'waiting' && c.order.style !== 'chips'); i++) sim.update(0.1);
+    return { sim, c: sim.customers.find((c) => c.state === 'waiting' && c.order.style !== 'chips')! };
+  };
+
+  it('costs patience once and marks the order clarified', () => {
+    const { sim, c } = spokenCustomer();
+    const before = c.patience;
+    expect(sim.askAgain(c.id)).toBe(true);
+    expect(c.order.clarified).toBe(true);
+    expect(c.patience).toBeCloseTo(Math.max(defaultBalance.hints.minPatienceSeconds, before - defaultBalance.hints.askPatienceSeconds), 5);
+    expect(sim.askAgain(c.id)).toBe(false);
+  });
+
+  it('is refused for chip orders and tutorial customers', () => {
+    const sim = seated();
+    expect(sim.askAgain(sim.customers[0].id)).toBe(false);
+  });
+
+  it('never drops patience below the floor', () => {
+    const { sim, c } = spokenCustomer();
+    c.patience = 5;
+    sim.askAgain(c.id);
+    expect(c.patience).toBe(defaultBalance.hints.minPatienceSeconds);
+  });
+});
+
+describe('MEC-009 tables', () => {
+  it('seats up to 5 customers on distinct tables when 5 are open', () => {
+    const sim = new DaySim({ seed: 9, day: 2, tables: 5 });
+    expect(sim.tableCount).toBe(5);
+    let most = 0;
+    for (let i = 0; i < 3000; i++) {
+      sim.update(0.1);
+      const tables = sim.customers.map((c) => c.table);
+      expect(new Set(tables).size).toBe(tables.length);
+      expect(Math.max(-1, ...tables)).toBeLessThan(5);
+      most = Math.max(most, tables.length);
+    }
+    expect(most).toBe(5);
+  });
+
+  it('caps the table count at maxTables', () => {
+    expect(new DaySim({ seed: 1, tables: 9 }).tableCount).toBe(defaultBalance.day.maxTables);
+    expect(new DaySim({ seed: 1 }).tableCount).toBe(defaultBalance.day.tables);
   });
 });

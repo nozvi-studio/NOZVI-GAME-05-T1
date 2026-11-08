@@ -109,6 +109,7 @@ const order = (over: Partial<Order> = {}): Order => ({
   style: 'chips',
   implied: null,
   tutorial: false,
+  clarified: false,
   ...over,
 });
 

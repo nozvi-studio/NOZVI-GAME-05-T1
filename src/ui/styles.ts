@@ -7,7 +7,7 @@ const CSS = `
   font-weight: 700; font-size: clamp(12px, min(2.4vw, 4.2vh), 20px); white-space: nowrap; }
 .htg-pill b { color: #ffd36b; }
 .htg-pill.low { border-color: #e04848; }
-.htg-bubble { position: absolute; transform: translate(-50%, -100%); background: #fffaf0; color: #2a1a12; border-radius: 12px;
+.htg-bubble { position: absolute; transform: translate(-50%, -100%); width: max-content; max-width: min(34vw, 300px); background: #fffaf0; color: #2a1a12; border-radius: 12px;
   padding: 6px 8px 8px; min-width: 96px; box-shadow: 0 3px 10px rgba(0,0,0,.45); font-size: clamp(10px, min(1.7vw, 3.4vh), 14px); font-weight: 600; }
 .htg-bubble::after { content: ""; position: absolute; left: 50%; bottom: -8px; margin-left: -8px; border: 8px solid transparent;
   border-bottom: 0; border-top-color: #fffaf0; }
@@ -25,6 +25,12 @@ const CSS = `
   .htg-bubble.spoken { min-width: 0; max-width: 31vw; }
   .htg-chip { padding: 0 4px; }
 }
+.htg-bubble .hint { font-size: .85em; color: #6b5a40; margin: -2px 0 4px; }
+.htg-ask { pointer-events: auto; font: inherit; font-size: .9em; font-weight: 800; min-height: 26px; padding: 2px 12px; margin: 0 0 5px;
+  border: 0; border-radius: 999px; background: #e8b04a; color: #2a1a12; cursor: pointer; touch-action: manipulation; }
+.htg-bubble.edge-left::before, .htg-bubble.edge-right::before { content: ""; position: absolute; top: 50%; margin-top: -9px; border: 9px solid transparent; }
+.htg-bubble.edge-left::before { left: -17px; border-right-color: #ffd36b; }
+.htg-bubble.edge-right::before { right: -17px; border-left-color: #ffd36b; }
 .htg-bubble .say { font-style: italic; font-weight: 700; line-height: 1.25; margin-bottom: 4px; }
 .htg-say { position: absolute; transform: translate(-50%, -100%); background: #fffaf0; color: #2a1a12; border-radius: 12px; padding: 5px 10px;
   max-width: 240px; font-weight: 800; font-size: clamp(12px, min(1.8vw, 3.6vh), 16px); text-align: center; box-shadow: 0 3px 10px rgba(0,0,0,.45);
@@ -87,6 +93,7 @@ const CSS = `
 .htg-card .verdict { font-weight: 700; margin-bottom: 10px; }
 .htg-card .verdict.win { color: #2e8b3e; }
 .htg-card .verdict.lose { color: #c0392b; }
+.htg-card .more { font-weight: 800; color: #2e8b3e; margin: -4px 0 12px; }
 .htg-card table { margin: 0 auto 14px; border-collapse: collapse; font-size: 16px; }
 .htg-card td { padding: 2px 10px; text-align: left; }
 .htg-card td + td { text-align: right; font-weight: 700; }

@@ -39,6 +39,8 @@ export interface Order {
   implied: string | null;
   /** Tutorial customers see portion counts and the broth zone (MEC-006 rules 5-6). */
   tutorial: boolean;
+  /** The player used "Hỏi lại": the order is shown explicitly (MEC-008 rule 2). */
+  clarified: boolean;
 }
 
 export type CustomerKind = 'regular' | 'hurried';

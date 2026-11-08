@@ -84,7 +84,8 @@
     "lengthSeconds": 300,
     "revenueTarget": 350,
     "tables": 3,
-    "freezeUntilFirstServed": true
+    "freezeUntilFirstServed": true,
+    "maxTables": 5
   },
   "customers": {
     "firstSpawnSeconds": 1.0,
@@ -125,5 +126,9 @@
   "payment": {
     "price": 30,
     "maxTip": 15
+  },
+  "hints": {
+    "askPatienceSeconds": 8,
+    "minPatienceSeconds": 3
   }
 }

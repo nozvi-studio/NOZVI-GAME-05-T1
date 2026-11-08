@@ -29,6 +29,8 @@ export interface DaySimOptions {
   balance?: Balance;
   /** 1 for the first day of a session; later days skip the tutorial (MEC-007 rules 8-9). */
   day?: number;
+  /** Tables open today (MEC-009 rule 1); defaults to `day.tables`, capped at `day.maxTables`. */
+  tables?: number;
 }
 
 const TEMPERS: readonly Temper[] = ['easy', 'normal', 'picky'];
@@ -56,10 +58,13 @@ export class DaySim {
 
   /** Day number in this session (1 = first day, with the tutorial). */
   readonly dayNumber: number;
+  /** Tables open today (MEC-009). */
+  readonly tableCount: number;
 
   constructor(opts: DaySimOptions = {}) {
     this.balance = opts.balance ?? defaultBalance;
     this.dayNumber = Math.max(1, opts.day ?? 1);
+    this.tableCount = Math.min(this.balance.day.maxTables, Math.max(1, opts.tables ?? this.balance.day.tables));
     this.rng = new Rng(opts.seed ?? Date.now());
     this.kitchenState = new KitchenState(this.balance);
     this.spawnTimer = this.balance.customers.firstSpawnSeconds;
@@ -170,6 +175,19 @@ export class DaySim {
     return payment;
   }
 
+  /**
+   * MEC-008 rule 2: "Hỏi lại" on a spoken order. Costs `hints.askPatienceSeconds` of patience (not below
+   * `hints.minPatienceSeconds`), once per customer; the order is then shown explicitly. Grading is unchanged.
+   */
+  askAgain(customerId: number): boolean {
+    const c = this.list.find((x) => x.id === customerId);
+    if (this.isEnded || !c || c.state !== 'waiting' || c.order.style === 'chips' || c.order.clarified || c.order.tutorial) return false;
+    const h = this.balance.hints;
+    c.patience = Math.max(Math.min(c.patience, h.minPatienceSeconds), c.patience - h.askPatienceSeconds);
+    c.order.clarified = true;
+    return true;
+  }
+
   summary(): DaySummary {
     const target = this.balance.day.revenueTarget;
     return { revenue: this.money, target, won: this.money >= target, ...this.stats };
@@ -235,7 +253,7 @@ export class DaySim {
   private freeTables(): number[] {
     const taken = new Set(this.list.map((c) => c.table));
     const free: number[] = [];
-    for (let i = 0; i < this.balance.day.tables; i++) if (!taken.has(i)) free.push(i);
+    for (let i = 0; i < this.tableCount; i++) if (!taken.has(i)) free.push(i);
     return free;
   }
 
@@ -270,7 +288,7 @@ export class DaySim {
     const o = this.balance.orders;
     const later = this.dayNumber > 1;
     const tutorial = !later && index < o.tutorialCustomers;
-    if (!later && index === 0) return { ...fromRecipe(REGULAR_BOWL), avoid: null, style: 'chips', implied: null, tutorial };
+    if (!later && index === 0) return { ...fromRecipe(REGULAR_BOWL), avoid: null, style: 'chips', implied: null, tutorial, clarified: false };
 
     let spoken: boolean;
     let p: number;
@@ -298,7 +316,7 @@ export class DaySim {
       const item = this.rng.pick(free);
       avoid = { item, kind: this.weighted([o.avoidKindWeights.dislike, o.avoidKindWeights.allergy]) === 0 ? 'dislike' : 'allergy' };
     }
-    return { ...base, avoid, style: implied ? 'implied' : spoken ? 'explicit' : 'chips', implied: recipe?.id ?? null, tutorial };
+    return { ...base, avoid, style: implied ? 'implied' : spoken ? 'explicit' : 'chips', implied: recipe?.id ?? null, tutorial, clarified: false };
   }
 
   private randomLines(): Pick<Order, 'toppings' | 'garnishes' | 'broth'> {

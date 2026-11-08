@@ -1,9 +1,9 @@
 ---
 id: MEC-008
 type: mechanic
-status: draft
+status: approved
 owner: game-design
-version: 0.1
+version: 0.2
 parent: GDD
 related: [MEC-005, MEC-006, MEC-007]
 studio_standard: 0.1
@@ -11,7 +11,7 @@ updated: 2026-11-08
 ---
 # MEC-008 — Hints when the player cannot read the customer (research and proposal)
 
-> **Draft for owner decision.** Nothing here is implemented. Owner request 2026-11-08: "nghiên cứu tính năng gợi ý khi người chơi không đoán được ý khách".
+> **Approved 2026-11-08: options A + D** (owner). Questions 2–4 were not answered, so the recommended defaults apply (patience cost 8 s, once per customer, notebook deferred to M3). Rules in §5 are the implementation baseline.
 
 ## 1. Problem
 From day 2 almost every order is spoken, and the implied share grows to 60 % by the end of the day (MEC-006 / MEC-007). An implied phrase ("Đói quá, làm tô thật đầy!") or an avoid clause the player cannot decode leads to a large deviation, often a scold (little or no money). Being stuck with no way out is frustrating and teaches nothing. The hint must keep reading as the core challenge, give a way out that has a cost, and teach the phrases so that hints are needed less over time.
@@ -54,8 +54,8 @@ Ship **A + D** first, keep **B** for the meta milestone (M3, together with saved
 ## 7. Balance impact
 Each hint costs about 15 % of a regular customer's patience (8 / 55 s). A bot probe after implementation should check that using a hint on every implied order still reaches the target on some days at ~20 s per bowl.
 
-## 12. Open questions (owner)
-1. Approve A + D (recommended), or another mix?
-2. Cost: patience 8 s (recommended), money, or tip only?
-3. Uses per customer: 1 (recommended) or unlimited with growing cost?
-4. Phrase notebook (B): now, or later in M3 with saved progress (recommended)?
+## 12. Owner decisions (2026-11-08)
+1. A + D (owner).
+2. Cost: patience 8 s, floor 3 s (default, not answered).
+3. Once per customer (default, not answered).
+4. Notebook (B) deferred to M3 (default, not answered).

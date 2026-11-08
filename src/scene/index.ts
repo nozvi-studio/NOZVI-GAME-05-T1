@@ -1,4 +1,4 @@
-export { createStreetScene, type StreetScene } from './street';
+export { MAX_TABLES, TABLE_LAYOUTS, createStreetScene, type StreetScene } from './street';
 export { CustomerViews, SEATED_HEAD_TOP, type CustomerTiming } from './customers';
 export { BowlView, BasketView } from './bowl';
 export { COUNTER_TOP } from './cart';

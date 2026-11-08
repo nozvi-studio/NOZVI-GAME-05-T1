@@ -8,7 +8,7 @@ export { STR, TOPPING_LABEL, GARNISH_LABEL, GRADE_LABEL, money } from './strings
 export type { BubbleData, GaugeData, ScreenPoint } from './widgets';
 export { orderProgress } from './orderProgress';
 export { shouldAskRotate } from './rotatePrompt';
-export { brothWord, leaveLine, reactionLine } from './speech';
+export { brothWord, explicitOrder, leaveLine, reactionLine } from './speech';
 export { TIPS, tutorialCaption } from './tutorial';
 export type { WorldLabel } from './fx';
 
@@ -26,11 +26,11 @@ export class Ui {
   private toastLayer: HTMLDivElement;
   private fxLayer: HTMLDivElement;
 
-  constructor(parent: HTMLElement, onReplay: () => void) {
+  constructor(parent: HTMLElement, onReplay: () => void, onAsk: (customerId: number) => void) {
     injectStyles();
     this.root = el('div', 'htg-ui', parent);
     this.labels = new WorldLabels(el('div', '', this.root));
-    this.bubbles = new OrderBubbles(el('div', '', this.root));
+    this.bubbles = new OrderBubbles(el('div', '', this.root), onAsk);
     this.gauge = new HoldGauge(this.root);
     this.hint = new HintRing(this.root);
     this.fxLayer = el('div', '', this.root);
@@ -53,12 +53,12 @@ export class Ui {
     sayText(this.fxLayer, at, text, tone);
   }
 
-  showSummary(s: DaySummary, day: number): void {
+  showSummary(s: DaySummary, day: number, extraTable = false): void {
     this.gauge.hide();
     this.hint.hide();
     this.bubbles.update([]);
     this.tutorial.hide();
-    this.summary.show(s, day);
+    this.summary.show(s, day, extraTable);
   }
 
   /** Clears transient UI for a new day. */

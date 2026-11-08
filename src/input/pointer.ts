@@ -5,6 +5,8 @@ export interface PointerHandlers {
   release(name: string): void;
   tap(name: string): void;
   drop(source: string, target: string | null): void;
+  /** MEC-009 rule 5: drag or swipe on empty space; `dx` in CSS px since the last move. */
+  pan?(dx: number): void;
 }
 
 export interface PointerOptions {
@@ -16,7 +18,10 @@ export interface PointerOptions {
 
 interface Active {
   pointerId: number;
+  /** Interactable name, or '' for a pan gesture on empty space. */
   name: string;
+  lastX: number;
+  lastY: number;
   x0: number;
   y0: number;
   dragging: boolean;
@@ -60,9 +65,22 @@ export class PointerInput {
     this.listen('lostpointercapture', (e) => this.onUp(e, true));
   }
 
-  /** Name currently being dragged, if any. */
+  /** Name currently being dragged, if any (a pan gesture is not a drag). */
   get dragging(): string | null {
-    return this.active?.dragging ? this.active.name : null;
+    return this.active?.dragging && this.active.name ? this.active.name : null;
+  }
+
+  /** Pointer x (CSS px, relative to the canvas) while an object is dragged; used for edge auto-pan. */
+  get dragPointerX(): number | null {
+    const a = this.active;
+    if (!a?.dragging || !a.name) return null;
+    return a.lastX - this.dom.getBoundingClientRect().left;
+  }
+
+  /** Re-places the dragged object under the pointer after the camera moved (auto-pan). */
+  refreshDrag(): void {
+    const a = this.active;
+    if (a?.dragging && a.name) this.moveGhost(a, a.lastX, a.lastY);
   }
 
   dispose(): void {
@@ -76,6 +94,7 @@ export class PointerInput {
     const a = this.active;
     if (!a) return;
     this.active = null;
+    if (!a.name) return;
     this.restoreGhost(a);
     this.handlers.release(a.name);
   }
@@ -86,8 +105,12 @@ export class PointerInput {
   }
 
   private setRay(e: PointerEvent): void {
+    this.setRayAt(e.clientX, e.clientY);
+  }
+
+  private setRayAt(clientX: number, clientY: number): void {
     const rect = this.dom.getBoundingClientRect();
-    this.ndc.set(((e.clientX - rect.left) / rect.width) * 2 - 1, -((e.clientY - rect.top) / rect.height) * 2 + 1);
+    this.ndc.set(((clientX - rect.left) / rect.width) * 2 - 1, -((clientY - rect.top) / rect.height) * 2 + 1);
     this.raycaster.setFromCamera(this.ndc, this.camera);
   }
 
@@ -104,25 +127,36 @@ export class PointerInput {
   private onDown(e: PointerEvent): void {
     if (this.active || (e.pointerType === 'mouse' && e.button !== 0)) return;
     const name = this.pick(e, null);
-    if (!name) return;
+    if (!name && !this.handlers.pan) return;
     e.preventDefault();
     this.dom.setPointerCapture?.(e.pointerId);
     this.active = {
       pointerId: e.pointerId,
-      name,
+      name: name ?? '',
+      lastX: e.clientX,
+      lastY: e.clientY,
       x0: e.clientX,
       y0: e.clientY,
       dragging: false,
       ghost: null,
       ghostOrigin: new THREE.Vector3(),
     };
-    this.handlers.press(name);
+    if (name) this.handlers.press(name);
   }
 
   private onMove(e: PointerEvent): void {
     const a = this.active;
     if (!a || e.pointerId !== a.pointerId) {
       if (!a && e.pointerType === 'mouse') this.dom.style.cursor = this.pick(e, null) ? 'pointer' : 'default';
+      return;
+    }
+    const dx = e.clientX - a.lastX;
+    a.lastX = e.clientX;
+    a.lastY = e.clientY;
+    if (!a.name) {
+      // Pan gesture on empty space (MEC-009 rule 5).
+      if (!a.dragging && Math.hypot(e.clientX - a.x0, e.clientY - a.y0) > DRAG_THRESHOLD_PX) a.dragging = true;
+      if (a.dragging) this.handlers.pan?.(dx);
       return;
     }
     if (!a.dragging) {
@@ -133,7 +167,11 @@ export class PointerInput {
       if (a.ghost) a.ghostOrigin.copy(a.ghost.position);
       this.dom.style.cursor = 'grabbing';
     }
-    this.setRay(e);
+    this.moveGhost(a, e.clientX, e.clientY);
+  }
+
+  private moveGhost(a: Active, clientX: number, clientY: number): void {
+    this.setRayAt(clientX, clientY);
     const ghost = a.ghost;
     if (ghost && this.raycaster.ray.intersectPlane(this.plane, this.hitPoint)) {
       ghost.position.copy(ghost.parent ? ghost.parent.worldToLocal(this.hitPoint) : this.hitPoint);
@@ -145,6 +183,7 @@ export class PointerInput {
     if (!a || e.pointerId !== a.pointerId) return;
     this.active = null;
     this.dom.style.cursor = 'default';
+    if (!a.name) return; // end of a pan gesture
     this.restoreGhost(a);
     this.handlers.release(a.name);
     if (cancelled) return;

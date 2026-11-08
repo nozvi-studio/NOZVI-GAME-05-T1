@@ -121,7 +121,7 @@ export class SummaryOverlay {
     this.hide();
   }
 
-  show(s: DaySummary, day: number): void {
+  show(s: DaySummary, day: number, extraTable = false): void {
     const rows: Array<[string, string]> = [
       [STR.revenue, `${money(s.revenue)} / ${money(s.target)}`],
       [STR.served, String(s.served)],
@@ -139,6 +139,7 @@ export class SummaryOverlay {
       el('td', '', tr).textContent = k;
       el('td', '', tr).textContent = v;
     }
+    if (extraTable) el('div', 'more', card).textContent = STR.moreTables;
     el('button', '', card).textContent = STR.playAgain;
     this.e.style.display = 'flex';
   }

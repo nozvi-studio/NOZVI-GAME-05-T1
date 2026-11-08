@@ -17,7 +17,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: Se
 - MEC-006 gameplay: deviation scoring (noodles and broth weigh most) with five reaction tiers happy / ok / grumble / complain / scold; hidden temperament (easy / normal / picky) shifts the tier; avoid requests ("không X", "tôi không thích X", "tôi dị ứng X"), allergy always scolds; broth levels ít / vừa / nhiều nước with ticks on the gauge after the tutorial; 10 implied phrases ("Đói quá, làm tô thật đầy!") whose share grows over the day; leaving customers say a line; spawn pace faster by mid-day; first 3 customers are tutorial (X/N counts, broth zone).
 - MEC-007: the day lasts 5 minutes; the first customer is untimed (clock, spawns and their patience pause, HUD shows "Chưa tính giờ"); tutorial captions walk the first bowl step by step and explain what is new for customers 2–3; one-time tips when the clock starts, when the tutorial ends and at the first spoken and implied orders. Revenue target 350 k, time marks scaled 5/3.
 - Later days: "Bán lại" starts day 2, 3… with no tutorial, no X/N counts and no freeze; 2 chip warm-up customers, then every order is spoken. Day number in the HUD and summary.
-- MEC-008 draft: research and proposal for order hints (not implemented).
+- MEC-008 hints: "Hỏi lại" button on spoken orders (costs 8 s of patience, once per customer; implied → explicit sentence, explicit → word chips); an implied phrase served badly gets a free translation line next time in the session.
+- MEC-009: a won day adds one table for the next day (max 5); layouts for 4 and 5 tables; drag or swipe on empty space pans the camera; dragging a bowl or the basket to a screen edge auto-pans; bubbles of off-screen customers stay pinned to the edge with an arrow; overlapping bubbles stack. Street lamp, festoon poles and scooters moved clear of the 5-table row.
 ### Changed
 - All icons removed (order chips, counter labels, HUD timer, hint hand, check mark); chips are words only and turn green when exact; garnish chips no longer tinted green.
 - Phase 1: bubbles and floating text anchor to the seated head instead of a standing height; floor grout softened, tiles enlarged and the floor dimmed; counter darkened and matte with dark tray liners; trash can scaled down and toned (hit box unchanged); clearer icons for liver and pepper.
@@ -25,6 +26,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: Se
 - `AGENTS.md`, `README.md`, `docs/README.md` point agents to `docs/standards/` as binding rules.
 - Camera moved closer and tables pulled toward the cart so tap targets stay usable on landscape phones; HUD text scales with viewport height.
 ### Fixed
+- Order bubbles near the right edge shrank to a narrow column (absolute positioning shrink-to-fit); bubbles now size to their content.
 - Tray and garnish-jar hit boxes were taller than the objects, so a tap on a back topping tray landed on the front tray; they now match the object height.
 - Deploy: Pages served the unbuilt `index.html` (black screen, 404 for `/src/main.ts`); the workflow now publishes the built `dist/` to `gh-pages`.
 ### Removed

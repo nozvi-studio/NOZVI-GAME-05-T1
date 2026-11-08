@@ -3,10 +3,12 @@ import { DaySim, nearestBrothLevel } from '../core';
 import type { Bowl, GameEvent, Grade, HintTarget } from '../core/types';
 import { GARNISHES, TOPPINGS } from '../core/types';
 import { PointerInput } from '../input';
-import { COUNTER_TOP, CustomerViews, SEATED_HEAD_TOP, cameraFov, createStreetScene, type StreetScene } from '../scene';
-import { GARNISH_LABEL, GRADE_LABEL, STR, TIPS, TOPPING_LABEL, Ui, brothWord, leaveLine, money, orderProgress, reactionLine, tutorialCaption, type BubbleData, type ScreenPoint, type WorldLabel } from '../ui';
+import { COUNTER_TOP, CustomerViews, MAX_TABLES, SEATED_HEAD_TOP, cameraFov, createStreetScene, type StreetScene } from '../scene';
+import { GARNISH_LABEL, GRADE_LABEL, STR, TIPS, TOPPING_LABEL, Ui, brothWord, explicitOrder, leaveLine, money, orderProgress, reactionLine, tutorialCaption, type BubbleData, type ScreenPoint, type WorldLabel } from '../ui';
 
 const MAX_DT = 0.1; // ARCHITECTURE §6: hidden tab must not skip the day.
+/** World units per second the camera pans while a dragged object is held at a screen edge. */
+const AUTO_PAN_SPEED = 6;
 
 const newSeed = () => Math.floor(Math.random() * 0x7fffffff);
 
@@ -27,6 +29,14 @@ export class Game {
   private tutorialDoneCount = 0;
   /** Day number in this session; day 2+ skips the tutorial (MEC-007 rule 8). */
   private day = 1;
+  /** MEC-009: tables today and tomorrow (+1 after a won day, max 5). */
+  private tables: number;
+  private nextTables: number;
+  /** MEC-009 rule 4: camera pan along x and its limit for the current tables and viewport. */
+  private pan = 0;
+  private panLimit = 0;
+  /** MEC-008 rule 3: implied phrases served badly this session get a free translation next time. */
+  private failedImplied = new Set<string>();
   private tmp = new THREE.Vector3();
 
   constructor(
@@ -34,9 +44,11 @@ export class Game {
     container: HTMLElement,
   ) {
     this.sim = new DaySim({ seed: newSeed() });
+    this.tables = this.nextTables = this.sim.tableCount;
     this.street = createStreetScene(1);
+    this.street.setTableCount(this.tables);
     this.customerViews = new CustomerViews(this.street.scene, this.street.tables, this.sim.balance.customers);
-    this.ui = new Ui(container, () => this.restart());
+    this.ui = new Ui(container, () => this.restart(), (id) => this.sim.askAgain(id));
     this.input = new PointerInput(
       renderer.domElement,
       this.street.camera,
@@ -46,6 +58,7 @@ export class Game {
         release: (n) => this.onRelease(n),
         tap: (n) => this.onTap(n),
         drop: (s, t) => this.onDrop(s, t),
+        pan: (dx) => this.panBy(-dx / this.pxPerUnit()),
       },
       { canDrag: (n) => this.canDrag(n), dragHeight: this.street.cart.group.position.y + COUNTER_TOP + 0.35 },
     );
@@ -59,13 +72,40 @@ export class Game {
     this.street.camera.updateProjectionMatrix();
     if (this.ui.rotate.update()) this.input.cancel(); // upright phone: popup shows and the day pauses (VIS-501)
     this.renderer.setSize(width, height);
+    this.updatePanLimit();
+  }
+
+  // ---- camera pan (MEC-009 rules 4-5) ----
+
+  /** Screen px per world unit along x at the table row, for the current camera. */
+  private pxPerUnit(): number {
+    const cam = this.street.camera;
+    cam.updateMatrixWorld();
+    const a = this.tmp.set(this.pan, 0.6, 0.5).project(cam).x;
+    const b = this.tmp.set(this.pan + 1, 0.6, 0.5).project(cam).x;
+    return Math.max(1e-3, ((b - a) * this.width) / 2);
+  }
+
+  private updatePanLimit(): void {
+    const halfView = this.width / 2 / this.pxPerUnit();
+    this.panLimit = Math.max(0, this.street.tableEdge() - halfView * 0.96);
+    this.panBy(0);
+  }
+
+  private panBy(dx: number): void {
+    this.pan = Math.min(this.panLimit, Math.max(-this.panLimit, this.pan + dx));
+    this.street.setPan(this.pan);
   }
 
   /** Starts a new day with a fresh DaySim, no reload (GDD §4). */
   restart(): void {
     this.input.cancel();
     this.day += 1;
-    this.sim = new DaySim({ seed: newSeed(), day: this.day });
+    this.tables = this.nextTables;
+    this.sim = new DaySim({ seed: newSeed(), day: this.day, tables: this.tables });
+    this.street.setTableCount(this.tables);
+    this.pan = 0;
+    this.updatePanLimit();
     this.customerViews.clear();
     this.ui.reset();
     this.prevBasket = null;
@@ -75,6 +115,16 @@ export class Game {
 
   frame(dt: number): void {
     dt = Math.min(Math.max(dt, 0), MAX_DT);
+    // MEC-009 rule 5: dragging an object near a side edge pans toward it.
+    const px = this.input.dragPointerX;
+    if (px !== null && this.panLimit > 0) {
+      const edge = this.width * 0.09;
+      const dir = px < edge ? -1 : px > this.width - edge ? 1 : 0;
+      if (dir !== 0) {
+        this.panBy(dir * AUTO_PAN_SPEED * dt);
+        this.input.refreshDrag();
+      }
+    }
     this.clockTime += dt;
     // The day is paused while the rotate popup covers the screen.
     if (!this.sim.ended && !this.ui.rotate.visible) for (const e of this.sim.update(dt)) this.onEvent(e);
@@ -143,7 +193,8 @@ export class Game {
       if (st === 'implied') this.tip('firstImplied');
     } else if (e.type === 'customerServed') {
       const { payment: p, customer: c } = e;
-      if (c.id === 1) this.tip('clockStarts');
+      if (c.id === 1 && this.day === 1) this.tip('clockStarts');
+      if (c.order.implied && (p.reaction === 'complain' || p.reaction === 'scold')) this.failedImplied.add(c.order.implied);
       if (c.order.tutorial) this.tutorialFinished();
       const at = this.project(this.headPos(c.table, 0.3));
       this.ui.float(at, `+${money(p.total)}`);
@@ -157,7 +208,9 @@ export class Game {
       this.ui.say(this.project(this.headPos(e.customer.table, 0.45)), leaveLine(e.customer.temper, e.customer.id), 'leave');
     } else if (e.type === 'dayEnded') {
       this.input.cancel();
-      this.ui.showSummary(e.summary, this.day);
+      // MEC-009 rule 1: a won day opens one more table tomorrow, up to the maximum.
+      this.nextTables = e.summary.won ? Math.min(MAX_TABLES, this.sim.balance.day.maxTables, this.tables + 1) : this.tables;
+      this.ui.showSummary(e.summary, this.day, this.nextTables > this.tables);
     }
   }
 
@@ -204,6 +257,8 @@ export class Game {
         patience: c.patience / c.maxPatience,
         hurried: c.kind === 'hurried',
         progress: orderProgress(c.order, sim.kitchen.bowl, sim.balance.broth),
+        // MEC-008 rule 3: free translation for an implied phrase served badly earlier this session.
+        hint: c.order.implied && !c.order.clarified && this.failedImplied.has(c.order.implied) ? explicitOrder(c.order, c.id) : null,
       });
     }
     this.ui.bubbles.update(bubbles);

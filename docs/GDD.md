@@ -41,10 +41,11 @@ Cooking steps (each one short interaction):
 | MEC-005 | Amounts, spoken orders, reactions | Read orders carefully; bad or wrong bowls cost money and anger customers | `docs/specs/mechanics/MEC-005-amounts-spoken-orders-reactions.md` | Approved |
 | MEC-006 | Deviation, temperament, implied orders | The further from what the customer wanted, the harsher they react | `docs/specs/mechanics/MEC-006-deviation-temperament-implied-orders.md` | Approved |
 | MEC-007 | Day length & tutorial | 5-minute day; untimed, captioned first bowl | `docs/specs/mechanics/MEC-007-day-length-tutorial.md` | Approved |
-| MEC-008 | Order hints | A way out when a spoken order cannot be decoded | `docs/specs/mechanics/MEC-008-order-hints.md` | Draft |
+| MEC-008 | Order hints | A way out when a spoken order cannot be decoded | `docs/specs/mechanics/MEC-008-order-hints.md` | Approved |
+| MEC-009 | Table progression & pan | Winning grows the stall (+1 table, max 5); swipe to see all tables | `docs/specs/mechanics/MEC-009-table-progression-camera-pan.md` | Approved |
 
 ## 3. Controls & input [REQUIRED]
-- Input scheme: mouse or touch only — tap, hold, drag. Landscape. Fixed camera, tilted top-down from behind the cart.
+- Input scheme: mouse or touch only — tap, hold, drag. Landscape. Fixed camera height and angle, tilted top-down from behind the cart; it pans sideways (drag or swipe on empty space) when the tables do not fit (MEC-009).
 - Launch to first input: **≤ 5 s**. No text walls: the first three customers are the tutorial, with one-line captions (MEC-007).
 
 ## 3b. First-time user experience (first 60 s) [REQUIRED]
